@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # File Management System (Dosya Yönetim Sistemi)
 
 Spring Boot ve React kullanılarak geliştirilen, kullanıcıların dosya ve klasörlerini
@@ -37,3 +38,6 @@ Kurulum talimatları geliştirme ilerledikçe eklenecektir.
 |---|---|
 | Admin | Kullanıcı yönetimi, tüm dosyaları görüntüleme, dosya/klasör silme |
 | Kullanıcı | Klasör oluşturma, dosya yükleme/indirme/silme/taşıma/paylaşma |
+=======
+# file-management-system
+>>>>>>> 2f7303d99dfe142be758530af0c38884badfc9e7
