@@ -1,0 +1,25 @@
+# ---- Backend (Java / Spring Boot / Maven) ----
+backend/target/
+backend/.mvn/
+backend/*.jar
+backend/*.war
+backend/.idea/
+backend/*.iml
+backend/HELP.md
+
+# ---- Frontend (React / Node) ----
+frontend/node_modules/
+frontend/build/
+frontend/dist/
+frontend/.env
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# ---- Genel ----
+.DS_Store
+*.log
+.env
+.vscode/
+.idea/
+uploads/

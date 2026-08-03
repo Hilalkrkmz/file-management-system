@@ -1,0 +1,26 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: file-management-system
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/file_management_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:CHANGE_THIS_SECRET_IN_PRODUCTION_MIN_32_CHARS}
+    expiration-ms: 86400000
+  storage:
+    location: uploads
+    max-file-size-mb: 20
+    allowed-extensions: pdf,docx,xlsx,pptx,txt,jpg,jpeg,png,zip,rar
