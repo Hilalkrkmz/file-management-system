@@ -9,11 +9,11 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "folders")
+@Table(name = "files")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Folder {
+public class File {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -22,9 +22,18 @@ public class Folder {
     @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false)
+    private String extension;
+
+    @Column(nullable = false)
+    private Long size;
+
+    @Column(nullable = false)
+    private String storagePath;
+
     @ManyToOne
-    @JoinColumn(name = "parent_folder_id")
-    private Folder parentFolder;
+    @JoinColumn(name = "folder_id", nullable = false)
+    private Folder folder;
 
     @ManyToOne
     @JoinColumn(name = "owner_id", nullable = false)
@@ -36,10 +45,10 @@ public class Folder {
     private LocalDateTime deletedAt;
 
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime uploadedAt;
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        this.uploadedAt = LocalDateTime.now();
     }
 }

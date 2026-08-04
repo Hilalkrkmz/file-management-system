@@ -1,5 +1,6 @@
 package com.filemanagement.entity;
 
+import com.filemanagement.enums.Permission;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,31 +10,31 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "folders")
+@Table(name = "file_shares")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Folder {
+public class FileShare {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false)
-    private String name;
+    @ManyToOne
+    @JoinColumn(name = "file_id", nullable = false)
+    private File file;
 
     @ManyToOne
-    @JoinColumn(name = "parent_folder_id")
-    private Folder parentFolder;
+    @JoinColumn(name = "shared_by", nullable = false)
+    private User sharedBy;
 
     @ManyToOne
-    @JoinColumn(name = "owner_id", nullable = false)
-    private User owner;
+    @JoinColumn(name = "shared_with", nullable = false)
+    private User sharedWith;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private boolean isDeleted = false;
-
-    private LocalDateTime deletedAt;
+    private Permission permission;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
