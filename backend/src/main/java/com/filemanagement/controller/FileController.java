@@ -1,0 +1,74 @@
+package com.filemanagement.controller;
+
+import com.filemanagement.dto.FileResponse;
+import com.filemanagement.service.FileService;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/files")
+public class FileController {
+
+    private final FileService fileService;
+
+    public FileController(FileService fileService) {
+        this.fileService = fileService;
+    }
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<FileResponse> upload(@RequestParam UUID folderId,
+                                               @RequestParam("file") MultipartFile file,
+                                               Authentication authentication) {
+        return ResponseEntity.ok(fileService.uploadFile(authentication.getName(), folderId, file));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<FileResponse>> list(@RequestParam UUID folderId,
+                                                   Authentication authentication) {
+        return ResponseEntity.ok(fileService.listFiles(authentication.getName(), folderId));
+    }
+
+    @GetMapping("/{id}/download")
+    public ResponseEntity<ByteArrayResource> download(@PathVariable UUID id,
+                                                      Authentication authentication) {
+        var fileEntity = fileService.getFileEntity(authentication.getName(), id);
+        byte[] data = fileService.downloadFile(authentication.getName(), id);
+
+        ByteArrayResource resource = new ByteArrayResource(data);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment().filename(fileEntity.getName()).build().toString())
+                .contentLength(data.length)
+                .body(resource);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable UUID id, Authentication authentication) {
+        fileService.deleteFile(authentication.getName(), id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/move")
+    public ResponseEntity<FileResponse> move(@PathVariable UUID id,
+                                             @RequestParam UUID targetFolderId,
+                                             Authentication authentication) {
+        return ResponseEntity.ok(fileService.moveFile(authentication.getName(), id, targetFolderId));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<FileResponse>> search(@RequestParam String query,
+                                                     Authentication authentication) {
+        return ResponseEntity.ok(fileService.search(authentication.getName(), query));
+    }
+}
