@@ -4,10 +4,12 @@ import com.filemanagement.dto.FolderRequest;
 import com.filemanagement.dto.FolderResponse;
 import com.filemanagement.entity.Folder;
 import com.filemanagement.entity.User;
+import com.filemanagement.repository.FileRepository;
 import com.filemanagement.repository.FolderRepository;
 import com.filemanagement.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -17,10 +19,13 @@ public class FolderService {
 
     private final FolderRepository folderRepository;
     private final UserRepository userRepository;
+    private final FileRepository fileRepository;
 
-    public FolderService(FolderRepository folderRepository, UserRepository userRepository) {
+    public FolderService(FolderRepository folderRepository, UserRepository userRepository,
+                         FileRepository fileRepository) {
         this.folderRepository = folderRepository;
         this.userRepository = userRepository;
+        this.fileRepository = fileRepository;
     }
 
     private User getUser(String username) {
@@ -87,9 +92,24 @@ public class FolderService {
             throw new IllegalArgumentException("Bu klasoru silme yetkiniz yok");
         }
 
+        softDeleteRecursive(folder);
+    }
+
+    private void softDeleteRecursive(Folder folder) {
+        LocalDateTime now = LocalDateTime.now();
+
         folder.setDeleted(true);
-        folder.setDeletedAt(java.time.LocalDateTime.now());
+        folder.setDeletedAt(now);
         folderRepository.save(folder);
+
+        fileRepository.findByFolderAndIsDeletedFalse(folder).forEach(file -> {
+            file.setDeleted(true);
+            file.setDeletedAt(now);
+            fileRepository.save(file);
+        });
+
+        List<Folder> subFolders = folderRepository.findByOwnerAndParentFolderAndIsDeletedFalse(folder.getOwner(), folder);
+        subFolders.forEach(this::softDeleteRecursive);
     }
 
     private FolderResponse toResponse(Folder folder) {
