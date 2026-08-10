@@ -18,12 +18,16 @@ public class LocalFileStorageService implements FileStorageService {
     @Override
     public String store(MultipartFile file, String storageKey) {
         try {
-            Path targetDir = Paths.get(storageLocation);
-            Files.createDirectories(targetDir);
+            Path baseDir = Paths.get(storageLocation).toAbsolutePath().normalize();
+            Files.createDirectories(baseDir);
 
-            Path targetPath = targetDir.resolve(storageKey);
+            Path targetPath = baseDir.resolve(storageKey).normalize();
+
+            if (!targetPath.startsWith(baseDir)) {
+                throw new SecurityException("Gecersiz dosya yolu tespit edildi");
+            }
+
             Files.copy(file.getInputStream(), targetPath);
-
             return targetPath.toString();
         } catch (IOException e) {
             throw new RuntimeException("Dosya kaydedilemedi: " + e.getMessage(), e);
@@ -33,7 +37,14 @@ public class LocalFileStorageService implements FileStorageService {
     @Override
     public byte[] load(String storagePath) {
         try {
-            return Files.readAllBytes(Paths.get(storagePath));
+            Path baseDir = Paths.get(storageLocation).toAbsolutePath().normalize();
+            Path target = Paths.get(storagePath).toAbsolutePath().normalize();
+
+            if (!target.startsWith(baseDir)) {
+                throw new SecurityException("Gecersiz dosya yolu tespit edildi");
+            }
+
+            return Files.readAllBytes(target);
         } catch (IOException e) {
             throw new RuntimeException("Dosya okunamadi: " + e.getMessage(), e);
         }
@@ -42,7 +53,14 @@ public class LocalFileStorageService implements FileStorageService {
     @Override
     public void delete(String storagePath) {
         try {
-            Files.deleteIfExists(Paths.get(storagePath));
+            Path baseDir = Paths.get(storageLocation).toAbsolutePath().normalize();
+            Path target = Paths.get(storagePath).toAbsolutePath().normalize();
+
+            if (!target.startsWith(baseDir)) {
+                throw new SecurityException("Gecersiz dosya yolu tespit edildi");
+            }
+
+            Files.deleteIfExists(target);
         } catch (IOException e) {
             throw new RuntimeException("Dosya silinemedi: " + e.getMessage(), e);
         }

@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -30,6 +31,19 @@ public class FileService {
 
     @Value("${app.storage.allowed-extensions}")
     private String allowedExtensionsRaw;
+
+    private static final Map<String, String> EXTENSION_MIME_MAP = Map.ofEntries(
+            Map.entry("pdf", "application/pdf"),
+            Map.entry("docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
+            Map.entry("xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+            Map.entry("pptx", "application/vnd.openxmlformats-officedocument.presentationml.presentation"),
+            Map.entry("txt", "text/plain"),
+            Map.entry("jpg", "image/jpeg"),
+            Map.entry("jpeg", "image/jpeg"),
+            Map.entry("png", "image/png"),
+            Map.entry("zip", "application/zip"),
+            Map.entry("rar", "application/x-rar-compressed")
+    );
 
     public FileService(FileRepository fileRepository, FolderRepository folderRepository,
                        UserRepository userRepository, FileStorageService storageService) {
@@ -69,6 +83,17 @@ public class FileService {
         String extension = originalName.substring(originalName.lastIndexOf('.') + 1).toLowerCase();
         if (!allowedExtensions().contains(extension)) {
             throw new IllegalArgumentException("Desteklenmeyen dosya uzantisi: " + extension);
+        }
+
+        String declaredContentType = multipartFile.getContentType();
+        String expectedMimeType = EXTENSION_MIME_MAP.get(extension);
+
+        if (expectedMimeType != null && declaredContentType != null
+                && !declaredContentType.equals(expectedMimeType)
+                && !declaredContentType.equals("application/octet-stream")) {
+            throw new IllegalArgumentException(
+                    "Dosya icerigi uzantisiyla uyusmuyor (beklenen: " + expectedMimeType
+                            + ", gelen: " + declaredContentType + ")");
         }
 
         long maxBytes = maxFileSizeMb * 1024 * 1024;
