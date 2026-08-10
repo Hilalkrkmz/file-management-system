@@ -1,6 +1,7 @@
 package com.filemanagement.service;
 
 import com.filemanagement.dto.FileResponse;
+import com.filemanagement.dto.StorageInfoResponse;
 import com.filemanagement.entity.Folder;
 import com.filemanagement.entity.User;
 import com.filemanagement.repository.FileRepository;
@@ -99,6 +100,13 @@ public class FileService {
         long maxBytes = maxFileSizeMb * 1024 * 1024;
         if (multipartFile.getSize() > maxBytes) {
             throw new IllegalArgumentException("Dosya boyutu " + maxFileSizeMb + "MB limitini asiyor");
+        }
+
+        long currentUsedBytes = fileRepository.sumSizeByOwner(owner);
+        long quotaBytes = owner.getStorageQuotaMb() * 1024 * 1024;
+        if (currentUsedBytes + multipartFile.getSize() > quotaBytes) {
+            throw new IllegalArgumentException("Depolama kotanizi asiyorsunuz (kota: "
+                    + owner.getStorageQuotaMb() + "MB)");
         }
 
         String finalName = resolveUniqueName(folder, originalName);
@@ -220,6 +228,22 @@ public class FileService {
                 file.getSize(),
                 file.getFolder().getId(),
                 file.getUploadedAt()
+        );
+    }
+
+    public StorageInfoResponse getStorageInfo(String username) {
+        User owner = getUser(username);
+        long usedBytes = fileRepository.sumSizeByOwner(owner);
+        long fileCount = fileRepository.countByOwnerAndIsDeletedFalse(owner);
+        double usedMb = usedBytes / (1024.0 * 1024.0);
+        double remainingMb = owner.getStorageQuotaMb() - usedMb;
+
+        return new StorageInfoResponse(
+                usedBytes,
+                Math.round(usedMb * 100.0) / 100.0,
+                fileCount,
+                owner.getStorageQuotaMb(),
+                Math.round(remainingMb * 100.0) / 100.0
         );
     }
 }

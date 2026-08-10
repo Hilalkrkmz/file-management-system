@@ -1,8 +1,10 @@
 package com.filemanagement.controller;
 
 import com.filemanagement.dto.AdminFileResponse;
+import com.filemanagement.dto.UpdateQuotaRequest;
 import com.filemanagement.dto.UserResponse;
 import com.filemanagement.service.AdminService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,5 +47,11 @@ public class AdminController {
     public ResponseEntity<Void> deleteFolder(@PathVariable UUID id) {
         adminService.deleteFolder(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/users/{id}/quota")
+    public ResponseEntity<UserResponse> updateQuota(@PathVariable UUID id,
+                                                    @Valid @RequestBody UpdateQuotaRequest request) {
+        return ResponseEntity.ok(adminService.updateQuota(id, request.getQuotaMb()));
     }
 }

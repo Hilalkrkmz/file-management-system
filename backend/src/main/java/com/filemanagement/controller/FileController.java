@@ -1,6 +1,7 @@
 package com.filemanagement.controller;
 
 import com.filemanagement.dto.FileResponse;
+import com.filemanagement.dto.StorageInfoResponse;
 import com.filemanagement.service.FileService;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.ContentDisposition;
@@ -70,5 +71,10 @@ public class FileController {
     public ResponseEntity<List<FileResponse>> search(@RequestParam String query,
                                                      Authentication authentication) {
         return ResponseEntity.ok(fileService.search(authentication.getName(), query));
+    }
+
+    @GetMapping("/storage-usage")
+    public ResponseEntity<StorageInfoResponse> storageUsage(Authentication authentication) {
+        return ResponseEntity.ok(fileService.getStorageInfo(authentication.getName()));
     }
 }

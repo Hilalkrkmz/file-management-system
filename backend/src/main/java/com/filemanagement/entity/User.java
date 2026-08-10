@@ -32,6 +32,9 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
+    @Column(nullable = false)
+    private long storageQuotaMb = 1024; // varsayilan 1GB
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

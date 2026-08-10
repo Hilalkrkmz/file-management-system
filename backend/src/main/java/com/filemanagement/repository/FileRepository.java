@@ -4,6 +4,8 @@ import com.filemanagement.entity.File;
 import com.filemanagement.entity.Folder;
 import com.filemanagement.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -20,4 +22,10 @@ public interface FileRepository extends JpaRepository<File, UUID> {
     Optional<File> findByFolderAndNameAndIsDeletedFalse(Folder folder, String name);
 
     List<File> findByOwnerAndIsDeletedTrue(User owner);
+
+    @Query("SELECT COALESCE(SUM(f.size), 0) FROM File f WHERE f.owner = :owner AND f.isDeleted = false")
+    long sumSizeByOwner(@Param("owner") User owner);
+
+    long countByOwnerAndIsDeletedFalse(User owner);
+
 }

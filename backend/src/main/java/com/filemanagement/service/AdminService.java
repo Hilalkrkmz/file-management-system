@@ -4,6 +4,7 @@ import com.filemanagement.dto.AdminFileResponse;
 import com.filemanagement.dto.UserResponse;
 import com.filemanagement.entity.File;
 import com.filemanagement.entity.Folder;
+import com.filemanagement.entity.User;
 import com.filemanagement.repository.FileRepository;
 import com.filemanagement.repository.FolderRepository;
 import com.filemanagement.repository.UserRepository;
@@ -30,7 +31,8 @@ public class AdminService {
 
     public List<UserResponse> listUsers() {
         return userRepository.findAll().stream()
-                .map(u -> new UserResponse(u.getId(), u.getUsername(), u.getEmail(), u.getRole(), u.getCreatedAt()))
+                .map(u -> new UserResponse(u.getId(), u.getUsername(), u.getEmail(),
+                        u.getRole(), u.getStorageQuotaMb(), u.getCreatedAt()))
                 .collect(Collectors.toList());
     }
 
@@ -63,5 +65,16 @@ public class AdminService {
             throw new IllegalArgumentException("Kullanici bulunamadi");
         }
         userRepository.deleteById(userId);
+    }
+
+    public UserResponse updateQuota(UUID userId, long quotaMb) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Kullanici bulunamadi"));
+
+        user.setStorageQuotaMb(quotaMb);
+        userRepository.save(user);
+
+        return new UserResponse(user.getId(), user.getUsername(), user.getEmail(),
+                user.getRole(), user.getStorageQuotaMb(), user.getCreatedAt());
     }
 }
