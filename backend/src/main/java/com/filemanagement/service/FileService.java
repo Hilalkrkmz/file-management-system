@@ -246,4 +246,24 @@ public class FileService {
                 Math.round(remainingMb * 100.0) / 100.0
         );
     }
+
+    public List<FileResponse> listTrash(String username) {
+        User owner = getUser(username);
+        return fileRepository.findByOwnerAndIsDeletedTrue(owner)
+                .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    public void restoreFile(String username, UUID fileId) {
+        User owner = getUser(username);
+        com.filemanagement.entity.File file = fileRepository.findById(fileId)
+                .orElseThrow(() -> new IllegalArgumentException("Dosya bulunamadi"));
+
+        if (!file.getOwner().getId().equals(owner.getId())) {
+            throw new IllegalArgumentException("Bu dosyayi geri yukleme yetkiniz yok");
+        }
+
+        file.setDeleted(false);
+        file.setDeletedAt(null);
+        fileRepository.save(file);
+    }
 }

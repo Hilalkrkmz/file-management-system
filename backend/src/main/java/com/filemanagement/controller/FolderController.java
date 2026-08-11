@@ -38,4 +38,15 @@ public class FolderController {
         folderService.deleteFolder(authentication.getName(), id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/trash")
+    public ResponseEntity<List<FolderResponse>> trash(Authentication authentication) {
+        return ResponseEntity.ok(folderService.listTrash(authentication.getName()));
+    }
+
+    @PostMapping("/{id}/restore")
+    public ResponseEntity<Void> restore(@PathVariable UUID id, Authentication authentication) {
+        folderService.restoreFolder(authentication.getName(), id);
+        return ResponseEntity.ok().build();
+    }
 }

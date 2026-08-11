@@ -120,4 +120,24 @@ public class FolderService {
                 folder.getCreatedAt()
         );
     }
+
+    public List<FolderResponse> listTrash(String username) {
+        User owner = getUser(username);
+        return folderRepository.findByOwnerAndIsDeletedTrue(owner)
+                .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    public void restoreFolder(String username, UUID folderId) {
+        User owner = getUser(username);
+        Folder folder = folderRepository.findById(folderId)
+                .orElseThrow(() -> new IllegalArgumentException("Klasor bulunamadi"));
+
+        if (!folder.getOwner().getId().equals(owner.getId())) {
+            throw new IllegalArgumentException("Bu klasoru geri yukleme yetkiniz yok");
+        }
+
+        folder.setDeleted(false);
+        folder.setDeletedAt(null);
+        folderRepository.save(folder);
+    }
 }

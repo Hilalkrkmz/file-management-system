@@ -77,4 +77,15 @@ public class FileController {
     public ResponseEntity<StorageInfoResponse> storageUsage(Authentication authentication) {
         return ResponseEntity.ok(fileService.getStorageInfo(authentication.getName()));
     }
+
+    @GetMapping("/trash")
+    public ResponseEntity<List<FileResponse>> trash(Authentication authentication) {
+        return ResponseEntity.ok(fileService.listTrash(authentication.getName()));
+    }
+
+    @PostMapping("/{id}/restore")
+    public ResponseEntity<Void> restore(@PathVariable UUID id, Authentication authentication) {
+        fileService.restoreFile(authentication.getName(), id);
+        return ResponseEntity.ok().build();
+    }
 }
