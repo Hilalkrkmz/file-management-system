@@ -3,12 +3,22 @@ import { useAuth } from "./context/AuthContext.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
+import SharedWithMe from "./pages/SharedWithMe.jsx";
+import Admin from "./pages/Admin.jsx";
+import Trash from "./pages/Trash.jsx";
 
 function ProtectedRoute({ children }) {
     const { user } = useAuth();
     if (!user) {
         return <Navigate to="/login" replace />;
     }
+    return children;
+}
+
+function AdminRoute({ children }) {
+    const { user } = useAuth();
+    if (!user) return <Navigate to="/login" replace />;
+    if (user.role !== "ADMIN") return <Navigate to="/dashboard" replace />;
     return children;
 }
 
@@ -26,6 +36,30 @@ function App() {
                         </ProtectedRoute>
                     }
                 />
+                <Route
+                    path="/shared-with-me"
+                    element={
+                        <ProtectedRoute>
+                            <SharedWithMe />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/admin"
+                    element={
+                        <AdminRoute>
+                            <Admin />
+                        </AdminRoute>
+                    }
+                />
+                <Route
+    path="/trash"
+    element={
+        <ProtectedRoute>
+            <Trash />
+        </ProtectedRoute>
+    }
+/>
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
         </BrowserRouter>
