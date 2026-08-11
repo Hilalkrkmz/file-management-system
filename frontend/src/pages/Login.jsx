@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
+import Alert from "@mui/material/Alert";
+import Paper from "@mui/material/Paper";
+import "../styles/Login.css";
 
 function Login() {
     const [username, setUsername] = useState("");
@@ -21,32 +27,37 @@ function Login() {
     };
 
     return (
-        <div style={{ maxWidth: 400, margin: "100px auto" }}>
-            <h2>Giris Yap</h2>
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <input
-                        type="text"
-                        placeholder="Kullanici adi"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                    />
-                </div>
-                <div>
-                    <input
-                        type="password"
-                        placeholder="Sifre"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                </div>
-                {error && <p style={{ color: "red" }}>{error}</p>}
-                <button type="submit">Giris Yap</button>
+        <Paper elevation={3} className="auth-container">
+            <Typography variant="h5" className="auth-title">
+                Giris Yap
+            </Typography>
+
+            <form onSubmit={handleSubmit} className="auth-container" style={{ margin: 0, padding: 0 }}>
+                <TextField
+                    label="Kullanici adi"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    fullWidth
+                />
+                <TextField
+                    label="Sifre"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    fullWidth
+                />
+
+                {error && <Alert severity="error">{error}</Alert>}
+
+                <Button type="submit" variant="contained" fullWidth>
+                    Giris Yap
+                </Button>
             </form>
-            <p>
+
+            <Typography className="auth-footer">
                 Hesabin yok mu? <Link to="/register">Kayit Ol</Link>
-            </p>
-        </div>
+            </Typography>
+        </Paper>
     );
 }
 
