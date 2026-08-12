@@ -1,16 +1,14 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { getAllUsers, getAllFiles, adminDeleteFile, updateUserQuota } from "../api/adminApi";
+import Layout from "../components/Layout.jsx";
 import Typography from "@mui/material/Typography";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import IconButton from "@mui/material/IconButton";
 import Alert from "@mui/material/Alert";
-import MuiLink from "@mui/material/Link";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
-import "../styles/SimpleList.css";
 
 function Admin() {
     const [users, setUsers] = useState([]);
@@ -47,11 +45,8 @@ function Admin() {
     };
 
     return (
-        <div className="page-container">
-            <MuiLink component={Link} to="/dashboard" className="page-back-link">
-                ← Geri
-            </MuiLink>
-            <Typography variant="h5" gutterBottom>Admin Paneli</Typography>
+        <Layout>
+            <Typography variant="h4" gutterBottom>Admin Paneli</Typography>
             {error && <Alert severity="error">{error}</Alert>}
 
             <Typography variant="h6">Kullanicilar</Typography>
@@ -91,7 +86,7 @@ function Admin() {
                     </ListItem>
                 ))}
             </List>
-        </div>
+        </Layout>
     );
 }
 

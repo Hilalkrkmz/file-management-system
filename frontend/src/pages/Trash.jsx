@@ -1,18 +1,16 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { getFolderTrash, restoreFolder } from "../api/folderApi";
 import { getFileTrash, restoreFile } from "../api/fileApi";
+import Layout from "../components/Layout.jsx";
 import Typography from "@mui/material/Typography";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import IconButton from "@mui/material/IconButton";
 import Alert from "@mui/material/Alert";
-import MuiLink from "@mui/material/Link";
 import RestoreIcon from "@mui/icons-material/Restore";
 import FolderIcon from "@mui/icons-material/Folder";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import "../styles/SimpleList.css";
 
 function Trash() {
     const [folders, setFolders] = useState([]);
@@ -47,11 +45,8 @@ function Trash() {
     };
 
     return (
-        <div className="page-container">
-            <MuiLink component={Link} to="/dashboard" className="page-back-link">
-                ← Geri
-            </MuiLink>
-            <Typography variant="h5" gutterBottom>Cop Kutusu</Typography>
+        <Layout>
+            <Typography variant="h4" gutterBottom>Cop Kutusu</Typography>
             {error && <Alert severity="error">{error}</Alert>}
 
             <Typography variant="h6">Klasorler</Typography>
@@ -87,7 +82,7 @@ function Trash() {
                     </ListItem>
                 ))}
             </List>
-        </div>
+        </Layout>
     );
 }
 

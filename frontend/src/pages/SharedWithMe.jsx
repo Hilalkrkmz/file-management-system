@@ -1,14 +1,12 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { getSharedWithMe } from "../api/shareApi";
+import Layout from "../components/Layout.jsx";
 import Typography from "@mui/material/Typography";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import Alert from "@mui/material/Alert";
-import MuiLink from "@mui/material/Link";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import "../styles/SimpleList.css";
 
 function SharedWithMe() {
     const [shares, setShares] = useState([]);
@@ -21,11 +19,8 @@ function SharedWithMe() {
     }, []);
 
     return (
-        <div className="page-container">
-            <MuiLink component={Link} to="/dashboard" className="page-back-link">
-                ← Geri
-            </MuiLink>
-            <Typography variant="h5" gutterBottom>Benimle Paylasilanlar</Typography>
+        <Layout>
+            <Typography variant="h4" gutterBottom>Benimle Paylasilanlar</Typography>
             {error && <Alert severity="error">{error}</Alert>}
             <List>
                 {shares.map((s) => (
@@ -38,7 +33,7 @@ function SharedWithMe() {
                     </ListItem>
                 ))}
             </List>
-        </div>
+        </Layout>
     );
 }
 
