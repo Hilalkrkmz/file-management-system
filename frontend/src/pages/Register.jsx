@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
+import Alert from "@mui/material/Alert";
+import Paper from "@mui/material/Paper";
+import "../styles/Login.css";
 
 function Register() {
     const [username, setUsername] = useState("");
@@ -22,40 +28,44 @@ function Register() {
     };
 
     return (
-        <div style={{ maxWidth: 400, margin: "100px auto" }}>
-            <h2>Kayit Ol</h2>
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <input
-                        type="text"
-                        placeholder="Kullanici adi"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                    />
-                </div>
-                <div>
-                    <input
-                        type="email"
-                        placeholder="Email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                    />
-                </div>
-                <div>
-                    <input
-                        type="password"
-                        placeholder="Sifre"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                </div>
-                {error && <p style={{ color: "red" }}>{error}</p>}
-                <button type="submit">Kayit Ol</button>
+        <Paper elevation={3} className="auth-container">
+            <Typography variant="h5" className="auth-title">
+                Kayit Ol
+            </Typography>
+
+            <form onSubmit={handleSubmit} className="auth-container" style={{ margin: 0, padding: 0 }}>
+                <TextField
+                    label="Kullanici adi"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    fullWidth
+                />
+                <TextField
+                    label="Email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    fullWidth
+                />
+                <TextField
+                    label="Sifre"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    fullWidth
+                />
+
+                {error && <Alert severity="error">{error}</Alert>}
+
+                <Button type="submit" variant="contained" fullWidth>
+                    Kayit Ol
+                </Button>
             </form>
-            <p>
+
+            <Typography className="auth-footer">
                 Zaten hesabin var mi? <Link to="/login">Giris Yap</Link>
-            </p>
-        </div>
+            </Typography>
+        </Paper>
     );
 }
 

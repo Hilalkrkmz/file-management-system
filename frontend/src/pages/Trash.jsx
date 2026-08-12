@@ -2,6 +2,17 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getFolderTrash, restoreFolder } from "../api/folderApi";
 import { getFileTrash, restoreFile } from "../api/fileApi";
+import Typography from "@mui/material/Typography";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemText from "@mui/material/ListItemText";
+import IconButton from "@mui/material/IconButton";
+import Alert from "@mui/material/Alert";
+import MuiLink from "@mui/material/Link";
+import RestoreIcon from "@mui/icons-material/Restore";
+import FolderIcon from "@mui/icons-material/Folder";
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import "../styles/SimpleList.css";
 
 function Trash() {
     const [folders, setFolders] = useState([]);
@@ -36,28 +47,46 @@ function Trash() {
     };
 
     return (
-        <div style={{ padding: 20 }}>
-            <Link to="/dashboard">← Geri</Link>
-            <h2>Cop Kutusu</h2>
-            {error && <p style={{ color: "red" }}>{error}</p>}
+        <div className="page-container">
+            <MuiLink component={Link} to="/dashboard" className="page-back-link">
+                ← Geri
+            </MuiLink>
+            <Typography variant="h5" gutterBottom>Cop Kutusu</Typography>
+            {error && <Alert severity="error">{error}</Alert>}
 
-            <h3>Klasorler</h3>
-            <ul>
+            <Typography variant="h6">Klasorler</Typography>
+            <List>
                 {folders.map((f) => (
-                    <li key={f.id}>
-                        📁 {f.name} <button onClick={() => handleRestoreFolder(f.id)}>Geri Yukle</button>
-                    </li>
+                    <ListItem
+                        key={f.id}
+                        secondaryAction={
+                            <IconButton onClick={() => handleRestoreFolder(f.id)}>
+                                <RestoreIcon />
+                            </IconButton>
+                        }
+                    >
+                        <FolderIcon style={{ marginRight: 8 }} />
+                        <ListItemText primary={f.name} />
+                    </ListItem>
                 ))}
-            </ul>
+            </List>
 
-            <h3>Dosyalar</h3>
-            <ul>
+            <Typography variant="h6">Dosyalar</Typography>
+            <List>
                 {files.map((f) => (
-                    <li key={f.id}>
-                        📄 {f.name} <button onClick={() => handleRestoreFile(f.id)}>Geri Yukle</button>
-                    </li>
+                    <ListItem
+                        key={f.id}
+                        secondaryAction={
+                            <IconButton onClick={() => handleRestoreFile(f.id)}>
+                                <RestoreIcon />
+                            </IconButton>
+                        }
+                    >
+                        <InsertDriveFileIcon style={{ marginRight: 8 }} />
+                        <ListItemText primary={f.name} />
+                    </ListItem>
                 ))}
-            </ul>
+            </List>
         </div>
     );
 }

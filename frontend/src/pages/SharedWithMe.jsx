@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getSharedWithMe } from "../api/shareApi";
+import Typography from "@mui/material/Typography";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemText from "@mui/material/ListItemText";
+import Alert from "@mui/material/Alert";
+import MuiLink from "@mui/material/Link";
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import "../styles/SimpleList.css";
 
 function SharedWithMe() {
     const [shares, setShares] = useState([]);
@@ -13,17 +21,23 @@ function SharedWithMe() {
     }, []);
 
     return (
-        <div style={{ padding: 20 }}>
-            <Link to="/dashboard">← Geri</Link>
-            <h2>Benimle Paylasilanlar</h2>
-            {error && <p style={{ color: "red" }}>{error}</p>}
-            <ul>
+        <div className="page-container">
+            <MuiLink component={Link} to="/dashboard" className="page-back-link">
+                ← Geri
+            </MuiLink>
+            <Typography variant="h5" gutterBottom>Benimle Paylasilanlar</Typography>
+            {error && <Alert severity="error">{error}</Alert>}
+            <List>
                 {shares.map((s) => (
-                    <li key={s.id}>
-                        📄 {s.fileName} — paylasan: {s.sharedByUsername} ({s.permission})
-                    </li>
+                    <ListItem key={s.id}>
+                        <InsertDriveFileIcon style={{ marginRight: 8 }} />
+                        <ListItemText
+                            primary={s.fileName}
+                            secondary={`Paylasan: ${s.sharedByUsername} (${s.permission})`}
+                        />
+                    </ListItem>
                 ))}
-            </ul>
+            </List>
         </div>
     );
 }

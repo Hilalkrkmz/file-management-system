@@ -1,6 +1,16 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getAllUsers, getAllFiles, adminDeleteFile, updateUserQuota } from "../api/adminApi";
+import Typography from "@mui/material/Typography";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemText from "@mui/material/ListItemText";
+import IconButton from "@mui/material/IconButton";
+import Alert from "@mui/material/Alert";
+import MuiLink from "@mui/material/Link";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import "../styles/SimpleList.css";
 
 function Admin() {
     const [users, setUsers] = useState([]);
@@ -28,7 +38,6 @@ function Admin() {
     };
 
     const handleDeleteFile = async (id) => {
-        if (!window.confirm("Silinsin mi?")) return;
         try {
             await adminDeleteFile(id);
             loadData();
@@ -38,30 +47,50 @@ function Admin() {
     };
 
     return (
-        <div style={{ padding: 20 }}>
-            <Link to="/dashboard">← Geri</Link>
-            <h2>Admin Paneli</h2>
-            {error && <p style={{ color: "red" }}>{error}</p>}
+        <div className="page-container">
+            <MuiLink component={Link} to="/dashboard" className="page-back-link">
+                ← Geri
+            </MuiLink>
+            <Typography variant="h5" gutterBottom>Admin Paneli</Typography>
+            {error && <Alert severity="error">{error}</Alert>}
 
-            <h3>Kullanicilar</h3>
-            <ul>
+            <Typography variant="h6">Kullanicilar</Typography>
+            <List>
                 {users.map((u) => (
-                    <li key={u.id}>
-                        {u.username} ({u.email}) — {u.role} — Kota: {u.storageQuotaMb}MB{" "}
-                        <button onClick={() => handleQuotaChange(u.id)}>Kota Degistir</button>
-                    </li>
+                    <ListItem
+                        key={u.id}
+                        secondaryAction={
+                            <IconButton onClick={() => handleQuotaChange(u.id)}>
+                                <EditIcon />
+                            </IconButton>
+                        }
+                    >
+                        <ListItemText
+                            primary={`${u.username} (${u.email})`}
+                            secondary={`${u.role} — Kota: ${u.storageQuotaMb}MB`}
+                        />
+                    </ListItem>
                 ))}
-            </ul>
+            </List>
 
-            <h3>Tum Dosyalar</h3>
-            <ul>
+            <Typography variant="h6">Tum Dosyalar</Typography>
+            <List>
                 {files.map((f) => (
-                    <li key={f.id}>
-                        {f.name} — sahibi: {f.ownerUsername} ({(f.size / 1024).toFixed(1)} KB){" "}
-                        <button onClick={() => handleDeleteFile(f.id)}>Sil</button>
-                    </li>
+                    <ListItem
+                        key={f.id}
+                        secondaryAction={
+                            <IconButton onClick={() => handleDeleteFile(f.id)}>
+                                <DeleteIcon />
+                            </IconButton>
+                        }
+                    >
+                        <ListItemText
+                            primary={f.name}
+                            secondary={`Sahibi: ${f.ownerUsername} (${(f.size / 1024).toFixed(1)} KB)`}
+                        />
+                    </ListItem>
                 ))}
-            </ul>
+            </List>
         </div>
     );
 }
