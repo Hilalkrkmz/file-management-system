@@ -3,19 +3,30 @@ import { getFolderTrash, restoreFolder } from "../api/folderApi";
 import { getFileTrash, restoreFile } from "../api/fileApi";
 import Layout from "../components/Layout.jsx";
 import Typography from "@mui/material/Typography";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import ListItemText from "@mui/material/ListItemText";
-import IconButton from "@mui/material/IconButton";
 import Alert from "@mui/material/Alert";
-import RestoreIcon from "@mui/icons-material/Restore";
+import Paper from "@mui/material/Paper";
+import TableContainer from "@mui/material/TableContainer";
+import Table from "@mui/material/Table";
+import TableHead from "@mui/material/TableHead";
+import TableBody from "@mui/material/TableBody";
+import TableRow from "@mui/material/TableRow";
+import TableCell from "@mui/material/TableCell";
+import Checkbox from "@mui/material/Checkbox";
+import Chip from "@mui/material/Chip";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import InputAdornment from "@mui/material/InputAdornment";
+import SearchIcon from "@mui/icons-material/Search";
 import FolderIcon from "@mui/icons-material/Folder";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import RestoreIcon from "@mui/icons-material/Restore";
+import Box from "@mui/material/Box";
 
 function Trash() {
     const [folders, setFolders] = useState([]);
     const [files, setFiles] = useState([]);
     const [error, setError] = useState("");
+    const [search, setSearch] = useState("");
 
     const loadTrash = () => {
         getFolderTrash().then((res) => setFolders(res.data)).catch((err) => setError(err.response?.data?.message || "Yuklenemedi"));
@@ -44,44 +55,90 @@ function Trash() {
         }
     };
 
+    const combinedRows = [
+        ...folders.map((f) => ({ ...f, type: "Klasor" })),
+        ...files.map((f) => ({ ...f, type: "Dosya" })),
+    ].filter((row) => row.name.toLowerCase().includes(search.toLowerCase()));
+
     return (
         <Layout>
-            <Typography variant="h4" gutterBottom>Cop Kutusu</Typography>
-            {error && <Alert severity="error">{error}</Alert>}
+            <div className="trash-topbar">
+                <Typography variant="h4">Cop Kutusu</Typography>
+                <TextField
+                    size="small"
+                    placeholder="Cop kutusunda ara..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <SearchIcon fontSize="small" />
+                            </InputAdornment>
+                        ),
+                    }}
+                />
+            </div>
 
-            <Typography variant="h6">Klasorler</Typography>
-            <List>
-                {folders.map((f) => (
-                    <ListItem
-                        key={f.id}
-                        secondaryAction={
-                            <IconButton onClick={() => handleRestoreFolder(f.id)}>
-                                <RestoreIcon />
-                            </IconButton>
-                        }
-                    >
-                        <FolderIcon style={{ marginRight: 8 }} />
-                        <ListItemText primary={f.name} />
-                    </ListItem>
-                ))}
-            </List>
+            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-            <Typography variant="h6">Dosyalar</Typography>
-            <List>
-                {files.map((f) => (
-                    <ListItem
-                        key={f.id}
-                        secondaryAction={
-                            <IconButton onClick={() => handleRestoreFile(f.id)}>
-                                <RestoreIcon />
-                            </IconButton>
-                        }
-                    >
-                        <InsertDriveFileIcon style={{ marginRight: 8 }} />
-                        <ListItemText primary={f.name} />
-                    </ListItem>
-                ))}
-            </List>
+            <TableContainer component={Paper} variant="outlined">
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell padding="checkbox">
+                                <Checkbox disabled />
+                            </TableCell>
+                            <TableCell>Ad</TableCell>
+                            <TableCell>Tur</TableCell>
+                            <TableCell align="right">Islem</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {combinedRows.map((row) => (
+                            <TableRow key={`${row.type}-${row.id}`} hover>
+                                <TableCell padding="checkbox">
+                                    <Checkbox />
+                                </TableCell>
+                                <TableCell>
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                        {row.type === "Klasor" ? (
+                                            <FolderIcon fontSize="small" color="primary" />
+                                        ) : (
+                                            <InsertDriveFileIcon fontSize="small" color="action" />
+                                        )}
+                                        {row.name}
+                                    </Box>
+                                </TableCell>
+                                <TableCell>
+                                    <Chip label={row.type} size="small" />
+                                </TableCell>
+                                <TableCell align="right">
+                                    <Button
+                                        size="small"
+                                        startIcon={<RestoreIcon />}
+                                        onClick={() =>
+                                            row.type === "Klasor"
+                                                ? handleRestoreFolder(row.id)
+                                                : handleRestoreFile(row.id)
+                                        }
+                                    >
+                                        Geri Yukle
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                        {combinedRows.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={4} align="center">
+                                    <Typography color="text.secondary" sx={{ py: 3 }}>
+                                        Cop kutusu bos
+                                    </Typography>
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </TableContainer>
         </Layout>
     );
 }

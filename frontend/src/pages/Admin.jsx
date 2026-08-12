@@ -1,91 +1,49 @@
-import { useState, useEffect } from "react";
-import { getAllUsers, getAllFiles, adminDeleteFile, updateUserQuota } from "../api/adminApi";
+import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout.jsx";
 import Typography from "@mui/material/Typography";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import ListItemText from "@mui/material/ListItemText";
-import IconButton from "@mui/material/IconButton";
-import Alert from "@mui/material/Alert";
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
+import Card from "@mui/material/Card";
+import CardActionArea from "@mui/material/CardActionArea";
+import CardContent from "@mui/material/CardContent";
+import Box from "@mui/material/Box";
+import PeopleIcon from "@mui/icons-material/People";
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 
 function Admin() {
-    const [users, setUsers] = useState([]);
-    const [files, setFiles] = useState([]);
-    const [error, setError] = useState("");
+    const navigate = useNavigate();
 
-    const loadData = () => {
-        getAllUsers().then((res) => setUsers(res.data)).catch((err) => setError(err.response?.data?.message || "Yuklenemedi"));
-        getAllFiles().then((res) => setFiles(res.data)).catch((err) => setError(err.response?.data?.message || "Yuklenemedi"));
-    };
-
-    useEffect(() => {
-        loadData();
-    }, []);
-
-    const handleQuotaChange = async (userId) => {
-        const newQuota = window.prompt("Yeni kota (MB):");
-        if (!newQuota) return;
-        try {
-            await updateUserQuota(userId, Number(newQuota));
-            loadData();
-        } catch (err) {
-            setError(err.response?.data?.message || "Kota guncellenemedi");
-        }
-    };
-
-    const handleDeleteFile = async (id) => {
-        try {
-            await adminDeleteFile(id);
-            loadData();
-        } catch (err) {
-            setError(err.response?.data?.message || "Silinemedi");
-        }
-    };
+    const sections = [
+        {
+            title: "Kullanicilar",
+            description: "Kayitli kullanicilari goruntule, kota duzenle",
+            icon: <PeopleIcon fontSize="large" color="primary" />,
+            path: "/admin/users",
+        },
+        {
+            title: "Tum Dosyalar",
+            description: "Sistemdeki tum dosyalari goruntule ve yonet",
+            icon: <InsertDriveFileIcon fontSize="large" color="primary" />,
+            path: "/admin/files",
+        },
+    ];
 
     return (
         <Layout>
             <Typography variant="h4" gutterBottom>Admin Paneli</Typography>
-            {error && <Alert severity="error">{error}</Alert>}
-
-            <Typography variant="h6">Kullanicilar</Typography>
-            <List>
-                {users.map((u) => (
-                    <ListItem
-                        key={u.id}
-                        secondaryAction={
-                            <IconButton onClick={() => handleQuotaChange(u.id)}>
-                                <EditIcon />
-                            </IconButton>
-                        }
-                    >
-                        <ListItemText
-                            primary={`${u.username} (${u.email})`}
-                            secondary={`${u.role} — Kota: ${u.storageQuotaMb}MB`}
-                        />
-                    </ListItem>
+            <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap", mt: 2 }}>
+                {sections.map((section) => (
+                    <Card key={section.path} variant="outlined" sx={{ width: 260 }}>
+                        <CardActionArea onClick={() => navigate(section.path)} sx={{ p: 3 }}>
+                            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 1.5 }}>
+                                {section.icon}
+                                <Typography variant="h6">{section.title}</Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    {section.description}
+                                </Typography>
+                            </Box>
+                        </CardActionArea>
+                    </Card>
                 ))}
-            </List>
-
-            <Typography variant="h6">Tum Dosyalar</Typography>
-            <List>
-                {files.map((f) => (
-                    <ListItem
-                        key={f.id}
-                        secondaryAction={
-                            <IconButton onClick={() => handleDeleteFile(f.id)}>
-                                <DeleteIcon />
-                            </IconButton>
-                        }
-                    >
-                        <ListItemText
-                            primary={f.name}
-                            secondary={`Sahibi: ${f.ownerUsername} (${(f.size / 1024).toFixed(1)} KB)`}
-                        />
-                    </ListItem>
-                ))}
-            </List>
+            </Box>
         </Layout>
     );
 }

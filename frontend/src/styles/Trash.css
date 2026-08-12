@@ -1,0 +1,11 @@
+.trash-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.trash-actions {
+    display: flex;
+    gap: 8px;
+}
