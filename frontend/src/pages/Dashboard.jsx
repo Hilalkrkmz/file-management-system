@@ -27,7 +27,10 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
 import ShareIcon from "@mui/icons-material/Share";
 import LinkIcon from "@mui/icons-material/Link";
-
+import Layout from "../components/Layout.jsx";
+import Grid from "@mui/material/Grid";
+import Card from "@mui/material/Card";
+import CardActionArea from "@mui/material/CardActionArea";
 import "../styles/Dashboard.css";
 
 function Dashboard() {
@@ -164,34 +167,30 @@ function Dashboard() {
     };
 
     return (
-        <div>
-            <AppBar position="static">
-                <Toolbar className="dashboard-toolbar">
-                    <Typography variant="h6">Hosgeldin, {user?.username}</Typography>
-                    <div className="dashboard-nav-links">
-                        <Button color="inherit" component={Link} to="/shared-with-me">
-                            Paylasilanlar
-                        </Button>
-                        <Button color="inherit" component={Link} to="/trash">
-                            Cop Kutusu
-                        </Button>
-                        {user?.role === "ADMIN" && (
-                            <Button color="inherit" component={Link} to="/admin">
-                                Admin
-                            </Button>
-                        )}
-                        <Button color="inherit" onClick={handleLogout}>
-                            Cikis Yap
-                        </Button>
-                    </div>
-                </Toolbar>
-            </AppBar>
+        <Layout>
+            <div className="dashboard-topbar">
+                <div>
+                    <Typography variant="h4" className="dashboard-title">Dosyalarim</Typography>
+                    {!searchResults && (
+                        <Breadcrumbs className="breadcrumb-row">
+                            {breadcrumb.map((crumb, index) => (
+                                <MuiLink
+                                    key={crumb.id ?? "root"}
+                                    component="button"
+                                    underline="hover"
+                                    onClick={() => handleBreadcrumbClick(index)}
+                                >
+                                    {crumb.name}
+                                </MuiLink>
+                            ))}
+                        </Breadcrumbs>
+                    )}
+                </div>
 
-            <div className="dashboard-content">
-                <form onSubmit={handleSearch} className="dashboard-toolbar-row">
+                <form onSubmit={handleSearch} style={{ display: "flex", gap: 8 }}>
                     <TextField
                         size="small"
-                        label="Dosya ara..."
+                        placeholder="Dosya ara..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -208,23 +207,11 @@ function Dashboard() {
                         </Button>
                     )}
                 </form>
+            </div>
 
-                {!searchResults && (
-                    <Breadcrumbs className="breadcrumb-row">
-                        {breadcrumb.map((crumb, index) => (
-                            <MuiLink
-                                key={crumb.id ?? "root"}
-                                component="button"
-                                underline="hover"
-                                onClick={() => handleBreadcrumbClick(index)}
-                            >
-                                {crumb.name}
-                            </MuiLink>
-                        ))}
-                    </Breadcrumbs>
-                )}
-
-                <div className="dashboard-toolbar-row">
+            <div className="section-header">
+                <div />
+                <div style={{ display: "flex", gap: 8 }}>
                     <Button variant="contained" onClick={() => setNewFolderDialogOpen(true)}>
                         + Yeni Klasor
                     </Button>
@@ -242,52 +229,49 @@ function Dashboard() {
                         </>
                     )}
                 </div>
+            </div>
 
-                {error && <Alert severity="error" style={{ marginBottom: 16 }}>{error}</Alert>}
-                {loading && <Typography>Yukleniyor...</Typography>}
+            {error && <Alert severity="error" style={{ marginBottom: 16 }}>{error}</Alert>}
+            {loading && <Typography>Yukleniyor...</Typography>}
 
-                {searchResults ? (
-                    <>
-                        <Typography variant="h6">Arama Sonuclari</Typography>
-                        <List>
-                            {searchResults.map((file) => (
-                                <ListItem
-                                    key={file.id}
-                                    secondaryAction={
-                                        <IconButton onClick={() => downloadFile(file.id, file.name)}>
-                                            <DownloadIcon />
-                                        </IconButton>
-                                    }
-                                >
-                                    <InsertDriveFileIcon style={{ marginRight: 8 }} />
-                                    <ListItemText
-                                        primary={file.name}
-                                        secondary={`${(file.size / 1024).toFixed(1)} KB`}
-                                    />
-                                </ListItem>
-                            ))}
-                        </List>
-                    </>
-                ) : (
+            {searchResults ? (
+                <>
+                    <Typography variant="h6">Arama Sonuclari</Typography>
                     <List>
-                        {folders.map((folder) => (
+                        {searchResults.map((file) => (
                             <ListItem
-                                key={folder.id}
+                                key={file.id}
                                 secondaryAction={
-                                    <IconButton onClick={() => setDeleteTarget({ type: "folder", id: folder.id })}>
-                                        <DeleteIcon />
+                                    <IconButton onClick={() => downloadFile(file.id, file.name)}>
+                                        <DownloadIcon />
                                     </IconButton>
                                 }
                             >
-                                <FolderIcon style={{ marginRight: 8 }} />
-                                <ListItemText
-                                    primary={folder.name}
-                                    onClick={() => handleFolderClick(folder)}
-                                    style={{ cursor: "pointer" }}
-                                />
+                                <InsertDriveFileIcon style={{ marginRight: 8 }} />
+                                <ListItemText primary={file.name} secondary={`${(file.size / 1024).toFixed(1)} KB`} />
                             </ListItem>
                         ))}
+                    </List>
+                </>
+            ) : (
+                <>
+                    {folders.length > 0 && (
+                        <div className="folder-grid">
+                            {folders.map((folder) => (
+                                <Card key={folder.id} className="folder-card" variant="outlined">
+                                    <CardActionArea onClick={() => handleFolderClick(folder)} className="folder-card">
+                                        <FolderIcon color="primary" />
+                                        <Typography noWrap>{folder.name}</Typography>
+                                    </CardActionArea>
+                                    <IconButton size="small" onClick={() => setDeleteTarget({ type: "folder", id: folder.id })}>
+                                        <DeleteIcon fontSize="small" />
+                                    </IconButton>
+                                </Card>
+                            ))}
+                        </div>
+                    )}
 
+                    <List>
                         {files.map((file) => (
                             <ListItem
                                 key={file.id}
@@ -309,15 +293,12 @@ function Dashboard() {
                                 }
                             >
                                 <InsertDriveFileIcon style={{ marginRight: 8 }} />
-                                <ListItemText
-                                    primary={file.name}
-                                    secondary={`${(file.size / 1024).toFixed(1)} KB`}
-                                />
+                                <ListItemText primary={file.name} secondary={`${(file.size / 1024).toFixed(1)} KB`} />
                             </ListItem>
                         ))}
                     </List>
-                )}
-            </div>
+                </>
+            )}
 
             <Dialog open={newFolderDialogOpen} onClose={() => setNewFolderDialogOpen(false)}>
                 <DialogTitle>Yeni Klasor</DialogTitle>
@@ -362,7 +343,7 @@ function Dashboard() {
                     <Button variant="contained" onClick={handleConfirmShare}>Paylas</Button>
                 </DialogActions>
             </Dialog>
-        </div>
+        </Layout>
     );
 }
 

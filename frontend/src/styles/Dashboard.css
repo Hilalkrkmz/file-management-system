@@ -1,30 +1,41 @@
-.dashboard-toolbar {
+.dashboard-topbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    width: 100%;
+    margin-bottom: 24px;
 }
 
-.dashboard-nav-links {
+.dashboard-title {
+    margin-bottom: 4px;
+}
+
+.folder-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.folder-card {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+    padding: 16px;
+    cursor: pointer;
+    transition: box-shadow 0.2s;
 }
 
-.dashboard-content {
-    padding: 24px;
-    max-width: 900px;
-    margin: 0 auto;
+.folder-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-.dashboard-toolbar-row {
+.section-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
+    margin-bottom: 12px;
 }
 
 .breadcrumb-row {
-    margin-bottom: 16px;
+    margin-bottom: 8px;
 }
