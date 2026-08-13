@@ -5,6 +5,7 @@ import com.filemanagement.dto.StorageInfoResponse;
 import com.filemanagement.entity.Folder;
 import com.filemanagement.entity.User;
 import com.filemanagement.repository.FileRepository;
+import com.filemanagement.repository.FileShareRepository;
 import com.filemanagement.repository.FolderRepository;
 import com.filemanagement.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,6 +27,7 @@ public class FileService {
     private final FolderRepository folderRepository;
     private final UserRepository userRepository;
     private final FileStorageService storageService;
+    private final FileShareRepository fileShareRepository;
 
     @Value("${app.storage.max-file-size-mb}")
     private long maxFileSizeMb;
@@ -47,11 +49,12 @@ public class FileService {
     );
 
     public FileService(FileRepository fileRepository, FolderRepository folderRepository,
-                       UserRepository userRepository, FileStorageService storageService) {
+                       UserRepository userRepository, FileStorageService storageService,FileShareRepository fileShareRepository) {
         this.fileRepository = fileRepository;
         this.folderRepository = folderRepository;
         this.userRepository = userRepository;
         this.storageService = storageService;
+        this.fileShareRepository = fileShareRepository;
     }
 
     private User getUser(String username) {
@@ -174,7 +177,9 @@ public class FileService {
                 .orElseThrow(() -> new IllegalArgumentException("Dosya bulunamadi"));
 
         boolean isOwner = file.getOwner().getId().equals(user.getId());
-        if (!isOwner) {
+        boolean isSharedWithUser = fileShareRepository.existsByFileAndSharedWith(file, user);
+
+        if (!isOwner && !isSharedWithUser) {
             throw new IllegalArgumentException("Bu dosyaya erisim yetkiniz yok");
         }
         return file;
