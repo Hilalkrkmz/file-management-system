@@ -16,3 +16,7 @@ export const deleteFolder = (id) => {
 export const getFolderTrash = () => axiosInstance.get("/folders/trash");
 
 export const restoreFolder = (id) => axiosInstance.post(`/folders/${id}/restore`);
+
+export const renameFolder = (id, name) => axiosInstance.patch(`/folders/${id}`, { name });
+export const moveFolder = (id, targetFolderId) =>
+    axiosInstance.put(`/folders/${id}/move`, null, { params: { targetFolderId } });

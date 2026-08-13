@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { getFolders, createFolder, deleteFolder } from "../api/folderApi";
-import { getFiles, uploadFile, downloadFile, deleteFile, searchFiles } from "../api/fileApi";
+import { getFolders, createFolder, deleteFolder, renameFolder, moveFolder } from "../api/folderApi";
+import { getFiles, uploadFile, downloadFile, deleteFile, searchFiles, renameFile, moveFile } from "../api/fileApi";
 import { shareWithUser, createShareLink } from "../api/shareApi";
 import { getFileIcon } from "../utils/fileIcons.jsx";
 import Layout from "../components/Layout.jsx";
-import Snackbar from "@mui/material/Snackbar";
+import MoveDialog from "../components/MoveDialog.jsx";
 
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
@@ -12,6 +12,7 @@ import TextField from "@mui/material/TextField";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
+import ListItemIcon from "@mui/material/ListItemIcon";
 import IconButton from "@mui/material/IconButton";
 import Breadcrumbs from "@mui/material/Breadcrumbs";
 import MuiLink from "@mui/material/Link";
@@ -23,11 +24,17 @@ import DialogActions from "@mui/material/DialogActions";
 import Divider from "@mui/material/Divider";
 import Card from "@mui/material/Card";
 import CardActionArea from "@mui/material/CardActionArea";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import Snackbar from "@mui/material/Snackbar";
 import FolderIcon from "@mui/icons-material/Folder";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
 import ShareIcon from "@mui/icons-material/Share";
 import LinkIcon from "@mui/icons-material/Link";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import EditIcon from "@mui/icons-material/Edit";
+import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
 
 import "../styles/Dashboard.css";
 
@@ -42,10 +49,16 @@ function Dashboard() {
     const [newFolderName, setNewFolderName] = useState("");
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [shareTarget, setShareTarget] = useState(null);
-    const [shareUsername, setShareUsername] = useState("");
+    const [shareEmail, setShareEmail] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState(null);
     const [snackbarMessage, setSnackbarMessage] = useState("");
+
+    const [menuAnchor, setMenuAnchor] = useState(null);
+    const [menuTarget, setMenuTarget] = useState(null);
+    const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+    const [renameValue, setRenameValue] = useState("");
+    const [moveDialogOpen, setMoveDialogOpen] = useState(false);
 
     const loadContents = async (folderId) => {
         setLoading(true);
@@ -122,14 +135,14 @@ function Dashboard() {
     };
 
     const handleConfirmShare = async () => {
-    if (!shareEmail.trim() || !shareTarget) return;
-    try {
-        await shareWithUser(shareTarget, shareEmail, "VIEW");
-        setShareEmail("");
-    } catch (err) {
-        setError(err.response?.data?.message || "Paylasilamadi");
-    }
-};
+        if (!shareEmail.trim() || !shareTarget) return;
+        try {
+            await shareWithUser(shareTarget, shareEmail, "VIEW");
+            setShareEmail("");
+        } catch (err) {
+            setError(err.response?.data?.message || "Paylasilamadi");
+        }
+    };
 
     const handleCreateLink = async (fileId) => {
         try {
@@ -153,6 +166,56 @@ function Dashboard() {
             setSearchResults(res.data);
         } catch (err) {
             setError(err.response?.data?.message || "Arama basarisiz");
+        }
+    };
+
+    const openMenu = (e, target) => {
+        setMenuAnchor(e.currentTarget);
+        setMenuTarget(target);
+    };
+
+    const closeMenu = () => {
+        setMenuAnchor(null);
+    };
+
+    const handleOpenRename = () => {
+        setRenameValue(menuTarget.name);
+        setRenameDialogOpen(true);
+        closeMenu();
+    };
+
+    const handleConfirmRename = async () => {
+        if (!renameValue.trim() || !menuTarget) return;
+        try {
+            if (menuTarget.type === "folder") {
+                await renameFolder(menuTarget.id, renameValue);
+            } else {
+                await renameFile(menuTarget.id, renameValue);
+            }
+            setRenameDialogOpen(false);
+            loadContents(currentFolderId);
+        } catch (err) {
+            setError(err.response?.data?.message || "Yeniden adlandirilamadi");
+        }
+    };
+
+    const handleOpenMove = () => {
+        setMoveDialogOpen(true);
+        closeMenu();
+    };
+
+    const handleConfirmMove = async (targetFolderId) => {
+        if (!menuTarget || !targetFolderId) return;
+        try {
+            if (menuTarget.type === "folder") {
+                await moveFolder(menuTarget.id, targetFolderId);
+            } else {
+                await moveFile(menuTarget.id, targetFolderId);
+            }
+            setMoveDialogOpen(false);
+            loadContents(currentFolderId);
+        } catch (err) {
+            setError(err.response?.data?.message || "Tasinamadi");
         }
     };
 
@@ -253,8 +316,14 @@ function Dashboard() {
                                         <FolderIcon color="primary" />
                                         <Typography noWrap>{folder.name}</Typography>
                                     </CardActionArea>
-                                    <IconButton size="small" onClick={() => setDeleteTarget({ type: "folder", id: folder.id })}>
-                                        <DeleteIcon fontSize="small" />
+                                    <IconButton
+                                        size="small"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            openMenu(e, { type: "folder", id: folder.id, name: folder.name });
+                                        }}
+                                    >
+                                        <MoreVertIcon fontSize="small" />
                                     </IconButton>
                                 </Card>
                             ))}
@@ -266,17 +335,9 @@ function Dashboard() {
                             <ListItem
                                 key={file.id}
                                 secondaryAction={
-                                    <>
-                                        <IconButton onClick={() => downloadFile(file.id, file.name)}>
-                                            <DownloadIcon />
-                                        </IconButton>
-                                        <IconButton onClick={() => setShareTarget(file.id)}>
-                                            <ShareIcon />
-                                        </IconButton>
-                                        <IconButton onClick={() => setDeleteTarget({ type: "file", id: file.id })}>
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </>
+                                    <IconButton onClick={(e) => openMenu(e, { type: "file", id: file.id, name: file.name })}>
+                                        <MoreVertIcon />
+                                    </IconButton>
                                 }
                             >
                                 <span style={{ marginRight: 8, display: "flex" }}>{getFileIcon(file.extension)}</span>
@@ -323,16 +384,16 @@ function Dashboard() {
                         autoFocus
                         fullWidth
                         size="small"
-                        label="Kullanici adi"
-                        value={shareUsername}
-                        onChange={(e) => setShareUsername(e.target.value)}
+                        label="Email"
+                        value={shareEmail}
+                        onChange={(e) => setShareEmail(e.target.value)}
                     />
                     <Button
                         fullWidth
                         variant="contained"
                         sx={{ mt: 1 }}
                         onClick={handleConfirmShare}
-                        disabled={!shareUsername.trim()}
+                        disabled={!shareEmail.trim()}
                     >
                         Paylas
                     </Button>
@@ -355,6 +416,58 @@ function Dashboard() {
                     <Button onClick={() => setShareTarget(null)}>Kapat</Button>
                 </DialogActions>
             </Dialog>
+
+            <Dialog open={renameDialogOpen} onClose={() => setRenameDialogOpen(false)}>
+                <DialogTitle>Yeniden Adlandir</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        autoFocus
+                        fullWidth
+                        label="Yeni ad"
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        style={{ marginTop: 8 }}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setRenameDialogOpen(false)}>Iptal</Button>
+                    <Button variant="contained" onClick={handleConfirmRename}>Kaydet</Button>
+                </DialogActions>
+            </Dialog>
+
+            <MoveDialog
+                open={moveDialogOpen}
+                onClose={() => setMoveDialogOpen(false)}
+                onConfirm={handleConfirmMove}
+            />
+
+            <Menu anchorEl={menuAnchor} open={!!menuAnchor} onClose={closeMenu}>
+                {menuTarget?.type === "file" && (
+                    <MenuItem onClick={() => { downloadFile(menuTarget.id, menuTarget.name); closeMenu(); }}>
+                        <ListItemIcon><DownloadIcon fontSize="small" /></ListItemIcon>
+                        Indir
+                    </MenuItem>
+                )}
+                {menuTarget?.type === "file" && (
+                    <MenuItem onClick={() => { setShareTarget(menuTarget.id); closeMenu(); }}>
+                        <ListItemIcon><ShareIcon fontSize="small" /></ListItemIcon>
+                        Paylas
+                    </MenuItem>
+                )}
+                <MenuItem onClick={handleOpenRename}>
+                    <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
+                    Yeniden Adlandir
+                </MenuItem>
+                <MenuItem onClick={handleOpenMove}>
+                    <ListItemIcon><DriveFileMoveIcon fontSize="small" /></ListItemIcon>
+                    Tasi
+                </MenuItem>
+                <MenuItem onClick={() => { setDeleteTarget(menuTarget); closeMenu(); }}>
+                    <ListItemIcon><DeleteIcon fontSize="small" /></ListItemIcon>
+                    Sil
+                </MenuItem>
+            </Menu>
+
             <Snackbar
                 open={!!snackbarMessage}
                 autoHideDuration={3000}
