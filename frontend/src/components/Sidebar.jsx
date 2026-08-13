@@ -18,6 +18,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import SettingsIcon from "@mui/icons-material/Settings";
 import "../styles/Sidebar.css";
+import { getMyProfile } from "../api/userApi";
+import axiosInstance from "../api/axiosInstance";
 
 const DRAWER_WIDTH = 240;
 
@@ -26,11 +28,25 @@ function Sidebar() {
     const location = useLocation();
     const { user } = useAuth();
     const [storage, setStorage] = useState(null);
+    const [photoUrl, setPhotoUrl] = useState(null);
 
     useEffect(() => {
         getStorageUsage()
             .then((res) => setStorage(res.data))
-            .catch(() => {});
+            .catch(() => { });
+    }, []);
+
+    useEffect(() => {
+        getMyProfile().then((res) => {
+            if (res.data.hasPhoto) {
+                axiosInstance
+                    .get("/users/me/photo", { responseType: "blob" })
+                    .then((photoRes) => {
+                        setPhotoUrl(URL.createObjectURL(photoRes.data));
+                    })
+                    .catch(() => { });
+            }
+        }).catch(() => { });
     }, []);
 
     const menuItems = [
@@ -86,7 +102,7 @@ function Sidebar() {
                 )}
 
                 <Box className="sidebar-profile">
-                    <Avatar sx={{ width: 32, height: 32 }}>
+                    <Avatar sx={{ width: 32, height: 32 }} src={photoUrl}>
                         {user?.username?.[0]?.toUpperCase()}
                     </Avatar>
                     <Typography variant="body2" sx={{ flexGrow: 1 }}>{user?.username}</Typography>

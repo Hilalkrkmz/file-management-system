@@ -1,16 +1,56 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import { getMyProfile, uploadProfilePhoto } from "../api/userApi";
+import axiosInstance from "../api/axiosInstance";
 import Layout from "../components/Layout.jsx";
 import Typography from "@mui/material/Typography";
 import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
+import Alert from "@mui/material/Alert";
 import LogoutIcon from "@mui/icons-material/Logout";
+import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 
 function Settings() {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const [profile, setProfile] = useState(null);
+    const [photoUrl, setPhotoUrl] = useState(null);
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
+
+    const loadProfile = () => {
+        getMyProfile().then((res) => {
+            setProfile(res.data);
+            if (res.data.hasPhoto) {
+                axiosInstance
+                    .get("/users/me/photo", { responseType: "blob" })
+                    .then((photoRes) => setPhotoUrl(URL.createObjectURL(photoRes.data)))
+                    .catch(() => {});
+            }
+        }).catch((err) => setError(err.response?.data?.message || "Yuklenemedi"));
+    };
+
+    useEffect(() => {
+        loadProfile();
+    }, []);
+
+    const handlePhotoChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setError("");
+        setSuccess("");
+        try {
+            await uploadProfilePhoto(file);
+            setSuccess("Profil fotografi guncellendi");
+            loadProfile();
+        } catch (err) {
+            setError(err.response?.data?.message || "Yuklenemedi");
+        }
+        e.target.value = "";
+    };
 
     const handleLogout = () => {
         logout();
@@ -22,13 +62,45 @@ function Settings() {
             <Typography variant="h4" gutterBottom>Ayarlar</Typography>
 
             <Paper variant="outlined" sx={{ p: 3, maxWidth: 400 }}>
+                {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+                {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-                    <Avatar sx={{ width: 56, height: 56 }}>
-                        {user?.username?.[0]?.toUpperCase()}
-                    </Avatar>
+                    <Box sx={{ position: "relative" }}>
+                        <Avatar sx={{ width: 64, height: 64 }} src={photoUrl}>
+                            {user?.username?.[0]?.toUpperCase()}
+                        </Avatar>
+                        <label htmlFor="photo-input">
+                            <input
+                                id="photo-input"
+                                type="file"
+                                accept="image/*"
+                                onChange={handlePhotoChange}
+                                style={{ display: "none" }}
+                            />
+                            <Box
+                                component="span"
+                                sx={{
+                                    position: "absolute",
+                                    bottom: -4,
+                                    right: -4,
+                                    bgcolor: "background.paper",
+                                    border: "1px solid",
+                                    borderColor: "divider",
+                                    borderRadius: "50%",
+                                    p: 0.5,
+                                    cursor: "pointer",
+                                    display: "flex",
+                                }}
+                            >
+                                <PhotoCameraIcon fontSize="small" />
+                            </Box>
+                        </label>
+                    </Box>
                     <div>
-                        <Typography variant="h6">{user?.username}</Typography>
-                        <Typography variant="body2" color="text.secondary">{user?.role}</Typography>
+                        <Typography variant="h6">{profile?.username || user?.username}</Typography>
+                        <Typography variant="body2" color="text.secondary">{profile?.email}</Typography>
+                        <Typography variant="body2" color="text.secondary">{profile?.role}</Typography>
                     </div>
                 </Box>
 
