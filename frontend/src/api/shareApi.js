@@ -1,7 +1,7 @@
 import axiosInstance from "./axiosInstance";
 
-export const shareWithUser = (fileId, targetUsername, permission) => {
-    return axiosInstance.post("/share/user", { fileId, targetUsername, permission });
+export const shareWithUser = (fileId, targetEmail, permission) => {
+    return axiosInstance.post("/share/user", { fileId, targetEmail, permission });
 };
 
 export const getSharedWithMe = () => {

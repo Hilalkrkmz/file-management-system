@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../context/AuthContext.jsx";
-import { useNavigate, Link } from "react-router-dom";
 import { getFolders, createFolder, deleteFolder } from "../api/folderApi";
 import { getFiles, uploadFile, downloadFile, deleteFile, searchFiles } from "../api/fileApi";
 import { shareWithUser, createShareLink } from "../api/shareApi";
+import { getFileIcon } from "../utils/fileIcons.jsx";
+import Layout from "../components/Layout.jsx";
+import Snackbar from "@mui/material/Snackbar";
 
-import AppBar from "@mui/material/AppBar";
-import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
@@ -21,22 +20,18 @@ import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
+import Divider from "@mui/material/Divider";
+import Card from "@mui/material/Card";
+import CardActionArea from "@mui/material/CardActionArea";
 import FolderIcon from "@mui/icons-material/Folder";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
 import ShareIcon from "@mui/icons-material/Share";
 import LinkIcon from "@mui/icons-material/Link";
-import Layout from "../components/Layout.jsx";
-import Grid from "@mui/material/Grid";
-import Card from "@mui/material/Card";
-import CardActionArea from "@mui/material/CardActionArea";
+
 import "../styles/Dashboard.css";
 
 function Dashboard() {
-    const { user, logout } = useAuth();
-    const navigate = useNavigate();
-
     const [currentFolderId, setCurrentFolderId] = useState(null);
     const [breadcrumb, setBreadcrumb] = useState([{ id: null, name: "Ana Dizin" }]);
     const [folders, setFolders] = useState([]);
@@ -50,6 +45,7 @@ function Dashboard() {
     const [shareUsername, setShareUsername] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState(null);
+    const [snackbarMessage, setSnackbarMessage] = useState("");
 
     const loadContents = async (folderId) => {
         setLoading(true);
@@ -126,22 +122,21 @@ function Dashboard() {
     };
 
     const handleConfirmShare = async () => {
-        if (!shareUsername.trim() || !shareTarget) return;
-        try {
-            await shareWithUser(shareTarget, shareUsername, "VIEW");
-            setShareTarget(null);
-            setShareUsername("");
-        } catch (err) {
-            setError(err.response?.data?.message || "Paylasilamadi");
-        }
-    };
+    if (!shareEmail.trim() || !shareTarget) return;
+    try {
+        await shareWithUser(shareTarget, shareEmail, "VIEW");
+        setShareEmail("");
+    } catch (err) {
+        setError(err.response?.data?.message || "Paylasilamadi");
+    }
+};
 
     const handleCreateLink = async (fileId) => {
         try {
             const res = await createShareLink(fileId, "DOWNLOAD", 24);
             const link = `${window.location.origin}/share/${res.data.token}`;
             navigator.clipboard.writeText(link);
-            alert("Link kopyalandi: " + link);
+            setSnackbarMessage("Link kopyalandi (24 saat gecerli)");
         } catch (err) {
             setError(err.response?.data?.message || "Link olusturulamadi");
         }
@@ -159,11 +154,6 @@ function Dashboard() {
         } catch (err) {
             setError(err.response?.data?.message || "Arama basarisiz");
         }
-    };
-
-    const handleLogout = () => {
-        logout();
-        navigate("/login");
     };
 
     return (
@@ -247,7 +237,7 @@ function Dashboard() {
                                     </IconButton>
                                 }
                             >
-                                <InsertDriveFileIcon style={{ marginRight: 8 }} />
+                                <span style={{ marginRight: 8, display: "flex" }}>{getFileIcon(file.extension)}</span>
                                 <ListItemText primary={file.name} secondary={`${(file.size / 1024).toFixed(1)} KB`} />
                             </ListItem>
                         ))}
@@ -283,16 +273,13 @@ function Dashboard() {
                                         <IconButton onClick={() => setShareTarget(file.id)}>
                                             <ShareIcon />
                                         </IconButton>
-                                        <IconButton onClick={() => handleCreateLink(file.id)}>
-                                            <LinkIcon />
-                                        </IconButton>
                                         <IconButton onClick={() => setDeleteTarget({ type: "file", id: file.id })}>
                                             <DeleteIcon />
                                         </IconButton>
                                     </>
                                 }
                             >
-                                <InsertDriveFileIcon style={{ marginRight: 8 }} />
+                                <span style={{ marginRight: 8, display: "flex" }}>{getFileIcon(file.extension)}</span>
                                 <ListItemText primary={file.name} secondary={`${(file.size / 1024).toFixed(1)} KB`} />
                             </ListItem>
                         ))}
@@ -326,23 +313,55 @@ function Dashboard() {
                 </DialogActions>
             </Dialog>
 
-            <Dialog open={!!shareTarget} onClose={() => setShareTarget(null)}>
-                <DialogTitle>Kullanici ile Paylas</DialogTitle>
+            <Dialog open={!!shareTarget} onClose={() => setShareTarget(null)} fullWidth maxWidth="xs">
+                <DialogTitle>Dosyayi Paylas</DialogTitle>
                 <DialogContent>
+                    <Typography variant="subtitle2" sx={{ mt: 1, mb: 1 }}>
+                        Kullanici ile paylas
+                    </Typography>
                     <TextField
                         autoFocus
                         fullWidth
+                        size="small"
                         label="Kullanici adi"
                         value={shareUsername}
                         onChange={(e) => setShareUsername(e.target.value)}
-                        style={{ marginTop: 8 }}
                     />
+                    <Button
+                        fullWidth
+                        variant="contained"
+                        sx={{ mt: 1 }}
+                        onClick={handleConfirmShare}
+                        disabled={!shareUsername.trim()}
+                    >
+                        Paylas
+                    </Button>
+
+                    <Divider sx={{ my: 2 }} />
+
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                        Link ile paylas
+                    </Typography>
+                    <Button
+                        fullWidth
+                        variant="outlined"
+                        startIcon={<LinkIcon />}
+                        onClick={() => handleCreateLink(shareTarget)}
+                    >
+                        Indirme linki olustur (24 saat gecerli)
+                    </Button>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setShareTarget(null)}>Iptal</Button>
-                    <Button variant="contained" onClick={handleConfirmShare}>Paylas</Button>
+                    <Button onClick={() => setShareTarget(null)}>Kapat</Button>
                 </DialogActions>
             </Dialog>
+            <Snackbar
+                open={!!snackbarMessage}
+                autoHideDuration={3000}
+                onClose={() => setSnackbarMessage("")}
+                message={snackbarMessage}
+                anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+            />
         </Layout>
     );
 }

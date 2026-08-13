@@ -9,23 +9,18 @@ export function AuthProvider({ children }) {
         return stored ? JSON.parse(stored) : null;
     });
 
-    const login = async (username, password) => {
-        const response = await axiosInstance.post("/auth/login", { username, password });
+    const login = async (email, password) => {
+        const response = await axiosInstance.post("/auth/login", { email, password });
         const { token, username: returnedUsername, role } = response.data;
 
         localStorage.setItem("token", token);
         localStorage.setItem("user", JSON.stringify({ username: returnedUsername, role }));
         setUser({ username: returnedUsername, role });
     };
-
+    
     const register = async (username, email, password) => {
-        const response = await axiosInstance.post("/auth/register", { username, email, password });
-        const { token, username: returnedUsername, role } = response.data;
-
-        localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify({ username: returnedUsername, role }));
-        setUser({ username: returnedUsername, role });
-    };
+    await axiosInstance.post("/auth/register", { username, email, password });
+};
 
     const logout = () => {
         localStorage.removeItem("token");

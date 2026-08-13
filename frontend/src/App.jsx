@@ -8,6 +8,7 @@ import Admin from "./pages/Admin.jsx";
 import Trash from "./pages/Trash.jsx";
 import AdminUsers from "./pages/AdminUsers.jsx";
 import AdminFiles from "./pages/AdminFiles.jsx";
+import Settings from "./pages/Settings.jsx";
 
 function ProtectedRoute({ children }) {
     const { user } = useAuth();
@@ -75,6 +76,14 @@ function App() {
                     element={
                         <ProtectedRoute>
                             <Trash />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/settings"
+                    element={
+                        <ProtectedRoute>
+                            <Settings />
                         </ProtectedRoute>
                     }
                 />

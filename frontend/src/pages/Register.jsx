@@ -21,7 +21,7 @@ function Register() {
         setError("");
         try {
             await register(username, email, password);
-            navigate("/dashboard");
+            navigate("/login", { state: { registered: true } });
         } catch (err) {
             setError(err.response?.data?.message || "Kayit basarisiz");
         }
@@ -29,10 +29,7 @@ function Register() {
 
     return (
         <Paper elevation={3} className="auth-container">
-            <Typography variant="h5" className="auth-title">
-                Kayit Ol
-            </Typography>
-
+            <Typography variant="h5" className="auth-title">Kayit Ol</Typography>
             <form onSubmit={handleSubmit} className="auth-container" style={{ margin: 0, padding: 0 }}>
                 <TextField
                     label="Kullanici adi"
@@ -54,14 +51,9 @@ function Register() {
                     onChange={(e) => setPassword(e.target.value)}
                     fullWidth
                 />
-
                 {error && <Alert severity="error">{error}</Alert>}
-
-                <Button type="submit" variant="contained" fullWidth>
-                    Kayit Ol
-                </Button>
+                <Button type="submit" variant="contained" fullWidth>Kayit Ol</Button>
             </form>
-
             <Typography className="auth-footer">
                 Zaten hesabin var mi? <Link to="/login">Giris Yap</Link>
             </Typography>
