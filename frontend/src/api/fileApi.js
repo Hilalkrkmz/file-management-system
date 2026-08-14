@@ -46,3 +46,5 @@ export const getFileTrash = () => axiosInstance.get("/files/trash");
 export const restoreFile = (id) => axiosInstance.post(`/files/${id}/restore`);
 
 export const renameFile = (id, name) => axiosInstance.patch(`/files/${id}`, { name });
+
+export const permanentDeleteFile = (id) => axiosInstance.delete(`/files/${id}/permanent`);
