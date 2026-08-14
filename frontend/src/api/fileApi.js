@@ -29,12 +29,20 @@ export const deleteFile = (id) => {
     return axiosInstance.delete(`/files/${id}`);
 };
 
+export const moveFile = (id, targetFolderId) => {
+    return axiosInstance.put(`/files/${id}/move`, null, { params: { targetFolderId } });
+};
+
+export const searchFiles = (query) => {
+    return axiosInstance.get("/files/search", { params: { query } });
+};
+
+export const getStorageUsage = () => {
+    return axiosInstance.get("/files/storage-usage");
+};
+
+export const getFolderTrash = () => axiosInstance.get("/folders/trash");
 export const getFileTrash = () => axiosInstance.get("/files/trash");
-
 export const restoreFile = (id) => axiosInstance.post(`/files/${id}/restore`);
-
-export const searchFiles = (query) => axiosInstance.get("/files/search", { params: { query } });
-
-export const getStorageUsage = () => axiosInstance.get("/files/storage-usage");
 
 export const renameFile = (id, name) => axiosInstance.patch(`/files/${id}`, { name });
