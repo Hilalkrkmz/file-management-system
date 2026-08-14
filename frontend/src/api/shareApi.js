@@ -11,3 +11,6 @@ export const getSharedWithMe = () => {
 export const createShareLink = (fileId, permission, expiresInHours) => {
     return axiosInstance.post("/share/link", { fileId, permission, expiresInHours });
 };
+
+export const getSharesForFile = (fileId) => axiosInstance.get(`/share/file/${fileId}`);
+export const removeShare = (shareId) => axiosInstance.delete(`/share/${shareId}`);

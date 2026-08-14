@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { getFolders, createFolder, deleteFolder, renameFolder, moveFolder } from "../api/folderApi";
 import { getFiles, uploadFile, downloadFile, deleteFile, searchFiles, renameFile, moveFile } from "../api/fileApi";
-import { shareWithUser, createShareLink } from "../api/shareApi";
+import { shareWithUser, createShareLink, getSharesForFile, removeShare } from "../api/shareApi";
 import { getFileIcon } from "../utils/fileIcons.jsx";
 import Layout from "../components/Layout.jsx";
 import MoveDialog from "../components/MoveDialog.jsx";
@@ -36,6 +36,7 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import EditIcon from "@mui/icons-material/Edit";
 import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
 
+import Avatar from "@mui/material/Avatar";
 import "../styles/Dashboard.css";
 
 function Dashboard() {
@@ -53,7 +54,7 @@ function Dashboard() {
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState(null);
     const [snackbarMessage, setSnackbarMessage] = useState("");
-
+    const [currentShares, setCurrentShares] = useState([]);
     const [menuAnchor, setMenuAnchor] = useState(null);
     const [menuTarget, setMenuTarget] = useState(null);
     const [renameDialogOpen, setRenameDialogOpen] = useState(false);
@@ -83,6 +84,14 @@ function Dashboard() {
     useEffect(() => {
         loadContents(currentFolderId);
     }, [currentFolderId]);
+
+    useEffect(() => {
+        if (shareTarget) {
+            getSharesForFile(shareTarget).then((res) => setCurrentShares(res.data)).catch(() => { });
+        } else {
+            setCurrentShares([]);
+        }
+    }, [shareTarget]);
 
     const handleFolderClick = (folder) => {
         setCurrentFolderId(folder.id);
@@ -139,6 +148,8 @@ function Dashboard() {
         try {
             await shareWithUser(shareTarget, shareEmail, "VIEW");
             setShareEmail("");
+            const res = await getSharesForFile(shareTarget);
+            setCurrentShares(res.data);
         } catch (err) {
             setError(err.response?.data?.message || "Paylasilamadi");
         }
@@ -166,6 +177,15 @@ function Dashboard() {
             setSearchResults(res.data);
         } catch (err) {
             setError(err.response?.data?.message || "Arama basarisiz");
+        }
+    };
+
+    const handleRemoveShare = async (shareId) => {
+        try {
+            await removeShare(shareId);
+            setCurrentShares(currentShares.filter((s) => s.id !== shareId));
+        } catch (err) {
+            setError(err.response?.data?.message || "Paylasim kaldirilamadi");
         }
     };
 
@@ -411,6 +431,34 @@ function Dashboard() {
                     >
                         Indirme linki olustur (24 saat gecerli)
                     </Button>
+                    {currentShares.length > 0 && (
+                        <>
+                            <Divider sx={{ my: 2 }} />
+                            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                                Paylasilan kisiler
+                            </Typography>
+                            <List dense>
+                                {currentShares.map((s) => (
+                                    <ListItem
+                                        key={s.id}
+                                        secondaryAction={
+                                            <IconButton size="small" onClick={() => handleRemoveShare(s.id)}>
+                                                <DeleteIcon fontSize="small" />
+                                            </IconButton>
+                                        }
+                                    >
+                                        <Avatar sx={{ width: 28, height: 28, mr: 1, fontSize: 14 }}>
+                                            {s.sharedWithUsername?.[0]?.toUpperCase()}
+                                        </Avatar>
+                                        <ListItemText
+                                            primary={s.sharedWithUsername}
+                                            secondary={s.permission}
+                                        />
+                                    </ListItem>
+                                ))}
+                            </List>
+                        </>
+                    )}
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setShareTarget(null)}>Kapat</Button>
