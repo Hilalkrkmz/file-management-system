@@ -50,8 +50,8 @@ public class ShareService {
         User sharer = getUser(username);
         File file = getOwnedFile(sharer, request.getFileId());
 
-        User target = userRepository.findByUsername(request.getTargetUsername())
-                .orElseThrow(() -> new IllegalArgumentException("Hedef kullanici bulunamadi"));
+        User target = userRepository.findByEmail(request.getTargetEmail())
+                .orElseThrow(() -> new IllegalArgumentException("Bu email ile kayitli kullanici bulunamadi"));
 
         if (target.getId().equals(sharer.getId())) {
             throw new IllegalArgumentException("Kendinizle paylasim yapamazsiniz");
@@ -70,14 +70,14 @@ public class ShareService {
         fileShareRepository.save(share);
 
         return new FileShareResponse(share.getId(), file.getId(), file.getName(),
-                sharer.getUsername(), share.getPermission());
+                sharer.getUsername(), target.getUsername(), share.getPermission());
     }
 
     public List<FileShareResponse> listSharedWithMe(String username) {
         User user = getUser(username);
         return fileShareRepository.findBySharedWith(user).stream()
                 .map(s -> new FileShareResponse(s.getId(), s.getFile().getId(), s.getFile().getName(),
-                        s.getSharedBy().getUsername(), s.getPermission()))
+                        s.getSharedBy().getUsername(), s.getSharedWith().getUsername(), s.getPermission()))
                 .collect(Collectors.toList());
     }
 
@@ -119,5 +119,27 @@ public class ShareService {
         }
 
         return link.getFile();
+    }
+
+    public List<FileShareResponse> listSharesForFile(String username, UUID fileId) {
+        User owner = getUser(username);
+        File file = getOwnedFile(owner, fileId);
+
+        return fileShareRepository.findByFile(file).stream()
+                .map(s -> new FileShareResponse(s.getId(), s.getFile().getId(), s.getFile().getName(),
+                        s.getSharedBy().getUsername(), s.getSharedWith().getUsername(), s.getPermission()))
+                .collect(Collectors.toList());
+    }
+
+    public void removeShare(String username, UUID shareId) {
+        User owner = getUser(username);
+        FileShare share = fileShareRepository.findById(shareId)
+                .orElseThrow(() -> new IllegalArgumentException("Paylasim bulunamadi"));
+
+        if (!share.getFile().getOwner().getId().equals(owner.getId())) {
+            throw new IllegalArgumentException("Bu paylasimi kaldirma yetkiniz yok");
+        }
+
+        fileShareRepository.delete(share);
     }
 }

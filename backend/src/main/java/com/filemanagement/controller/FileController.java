@@ -1,8 +1,10 @@
 package com.filemanagement.controller;
 
 import com.filemanagement.dto.FileResponse;
+import com.filemanagement.dto.RenameRequest;
 import com.filemanagement.dto.StorageInfoResponse;
 import com.filemanagement.service.FileService;
+import jakarta.validation.Valid;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -87,5 +89,18 @@ public class FileController {
     public ResponseEntity<Void> restore(@PathVariable UUID id, Authentication authentication) {
         fileService.restoreFile(authentication.getName(), id);
         return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<FileResponse> rename(@PathVariable UUID id,
+                                               @Valid @RequestBody RenameRequest request,
+                                               Authentication authentication) {
+        return ResponseEntity.ok(fileService.renameFile(authentication.getName(), id, request.getName()));
+    }
+
+    @DeleteMapping("/{id}/permanent")
+    public ResponseEntity<Void> permanentDelete(@PathVariable UUID id, Authentication authentication) {
+        fileService.permanentlyDeleteFile(authentication.getName(), id);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -140,4 +140,53 @@ public class FolderService {
         folder.setDeletedAt(null);
         folderRepository.save(folder);
     }
+
+    public FolderResponse renameFolder(String username, UUID folderId, String newName) {
+        User owner = getUser(username);
+        Folder folder = folderRepository.findById(folderId)
+                .orElseThrow(() -> new IllegalArgumentException("Klasor bulunamadi"));
+
+        if (!folder.getOwner().getId().equals(owner.getId())) {
+            throw new IllegalArgumentException("Bu klasoru yeniden adlandirma yetkiniz yok");
+        }
+
+        folder.setName(newName);
+        folderRepository.save(folder);
+        return toResponse(folder);
+    }
+
+    public FolderResponse moveFolder(String username, UUID folderId, UUID targetFolderId) {
+        User owner = getUser(username);
+
+        Folder folder = folderRepository.findById(folderId)
+                .orElseThrow(() -> new IllegalArgumentException("Klasor bulunamadi"));
+        if (!folder.getOwner().getId().equals(owner.getId())) {
+            throw new IllegalArgumentException("Bu klasoru tasima yetkiniz yok");
+        }
+
+        Folder target = folderRepository.findById(targetFolderId)
+                .orElseThrow(() -> new IllegalArgumentException("Hedef klasor bulunamadi"));
+        if (!target.getOwner().getId().equals(owner.getId())) {
+            throw new IllegalArgumentException("Hedef klasore erisim yetkiniz yok");
+        }
+        if (target.getId().equals(folder.getId())) {
+            throw new IllegalArgumentException("Bir klasor kendi icine tasinamaz");
+        }
+
+        folder.setParentFolder(target);
+        folderRepository.save(folder);
+        return toResponse(folder);
+    }
+
+    public void permanentlyDeleteFolder(String username, UUID folderId) {
+        User owner = getUser(username);
+        Folder folder = folderRepository.findById(folderId)
+                .orElseThrow(() -> new IllegalArgumentException("Klasor bulunamadi"));
+
+        if (!folder.getOwner().getId().equals(owner.getId())) {
+            throw new IllegalArgumentException("Bu klasoru silme yetkiniz yok");
+        }
+
+        folderRepository.delete(folder);
+    }
 }

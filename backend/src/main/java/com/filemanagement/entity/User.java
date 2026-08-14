@@ -32,6 +32,9 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
+    @Column(nullable = true)
+    private String profilePhotoPath;
+
     @Column(nullable = false)
     private long storageQuotaMb = 1024;
 

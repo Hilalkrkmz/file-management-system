@@ -14,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/share")
@@ -57,5 +58,17 @@ public class ShareController {
                         ContentDisposition.attachment().filename(file.getName()).build().toString())
                 .contentLength(data.length)
                 .body(resource);
+    }
+
+    @GetMapping("/file/{fileId}")
+    public ResponseEntity<List<FileShareResponse>> sharesForFile(@PathVariable UUID fileId,
+                                                                 Authentication authentication) {
+        return ResponseEntity.ok(shareService.listSharesForFile(authentication.getName(), fileId));
+    }
+
+    @DeleteMapping("/{shareId}")
+    public ResponseEntity<Void> removeShare(@PathVariable UUID shareId, Authentication authentication) {
+        shareService.removeShare(authentication.getName(), shareId);
+        return ResponseEntity.noContent().build();
     }
 }

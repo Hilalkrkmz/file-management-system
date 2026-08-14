@@ -2,6 +2,7 @@ package com.filemanagement.controller;
 
 import com.filemanagement.dto.FolderRequest;
 import com.filemanagement.dto.FolderResponse;
+import com.filemanagement.dto.RenameRequest;
 import com.filemanagement.service.FolderService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -48,5 +49,25 @@ public class FolderController {
     public ResponseEntity<Void> restore(@PathVariable UUID id, Authentication authentication) {
         folderService.restoreFolder(authentication.getName(), id);
         return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<FolderResponse> rename(@PathVariable UUID id,
+                                                 @Valid @RequestBody RenameRequest request,
+                                                 Authentication authentication) {
+        return ResponseEntity.ok(folderService.renameFolder(authentication.getName(), id, request.getName()));
+    }
+
+    @PutMapping("/{id}/move")
+    public ResponseEntity<FolderResponse> move(@PathVariable UUID id,
+                                               @RequestParam UUID targetFolderId,
+                                               Authentication authentication) {
+        return ResponseEntity.ok(folderService.moveFolder(authentication.getName(), id, targetFolderId));
+    }
+
+    @DeleteMapping("/{id}/permanent")
+    public ResponseEntity<Void> permanentDelete(@PathVariable UUID id, Authentication authentication) {
+        folderService.permanentlyDeleteFolder(authentication.getName(), id);
+        return ResponseEntity.noContent().build();
     }
 }

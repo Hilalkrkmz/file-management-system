@@ -1,6 +1,7 @@
 package com.filemanagement.dto;
 
 import com.filemanagement.enums.Permission;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -16,7 +17,8 @@ public class ShareWithUserRequest {
     private UUID fileId;
 
     @NotBlank
-    private String targetUsername;
+    @Email
+    private String targetEmail;
 
     @NotNull
     private Permission permission;

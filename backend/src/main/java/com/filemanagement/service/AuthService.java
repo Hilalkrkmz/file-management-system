@@ -44,11 +44,11 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
-        User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new IllegalArgumentException("Kullanici adi veya sifre hatali"));
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("Email veya sifre hatali"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new IllegalArgumentException("Kullanici adi veya sifre hatali");
+            throw new IllegalArgumentException("Email veya sifre hatali");
         }
 
         String token = jwtUtil.generateToken(user.getUsername(), user.getRole().name());

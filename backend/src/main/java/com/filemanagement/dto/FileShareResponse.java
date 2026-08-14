@@ -13,5 +13,6 @@ public class FileShareResponse {
     private UUID fileId;
     private String fileName;
     private String sharedByUsername;
+    private String sharedWithUsername;
     private Permission permission;
 }

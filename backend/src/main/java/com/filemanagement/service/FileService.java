@@ -271,4 +271,31 @@ public class FileService {
         file.setDeletedAt(null);
         fileRepository.save(file);
     }
+
+    public FileResponse renameFile(String username, UUID fileId, String newName) {
+        User owner = getUser(username);
+        com.filemanagement.entity.File file = fileRepository.findById(fileId)
+                .orElseThrow(() -> new IllegalArgumentException("Dosya bulunamadi"));
+
+        if (!file.getOwner().getId().equals(owner.getId())) {
+            throw new IllegalArgumentException("Bu dosyayi yeniden adlandirma yetkiniz yok");
+        }
+
+        file.setName(newName);
+        fileRepository.save(file);
+        return toResponse(file);
+    }
+
+    public void permanentlyDeleteFile(String username, UUID fileId) {
+        User owner = getUser(username);
+        com.filemanagement.entity.File file = fileRepository.findById(fileId)
+                .orElseThrow(() -> new IllegalArgumentException("Dosya bulunamadi"));
+
+        if (!file.getOwner().getId().equals(owner.getId())) {
+            throw new IllegalArgumentException("Bu dosyayi silme yetkiniz yok");
+        }
+
+        storageService.delete(file.getStoragePath());
+        fileRepository.delete(file);
+    }
 }
