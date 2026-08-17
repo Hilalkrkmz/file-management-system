@@ -14,10 +14,15 @@ import TableCell from "@mui/material/TableCell";
 import IconButton from "@mui/material/IconButton";
 import MuiLink from "@mui/material/Link";
 import DeleteIcon from "@mui/icons-material/Delete";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogActions from "@mui/material/DialogActions";
+import Button from "@mui/material/Button";
 
 function AdminFiles() {
     const [files, setFiles] = useState([]);
     const [error, setError] = useState("");
+    const [deleteTarget, setDeleteTarget] = useState(null);
 
     const loadFiles = () => {
         getAllFiles()
@@ -29,9 +34,11 @@ function AdminFiles() {
         loadFiles();
     }, []);
 
-    const handleDelete = async (id) => {
+    const handleConfirmDelete = async () => {
+        if (!deleteTarget) return;
         try {
-            await adminDeleteFile(id);
+            await adminDeleteFile(deleteTarget.id);
+            setDeleteTarget(null);
             loadFiles();
         } catch (err) {
             setError(err.response?.data?.message || "Silinemedi");
@@ -63,7 +70,7 @@ function AdminFiles() {
                                 <TableCell>{f.ownerUsername}</TableCell>
                                 <TableCell>{(f.size / 1024).toFixed(1)} KB</TableCell>
                                 <TableCell align="right">
-                                    <IconButton size="small" onClick={() => handleDelete(f.id)}>
+                                    <IconButton size="small" onClick={() => setDeleteTarget(f)}>
                                         <DeleteIcon fontSize="small" />
                                     </IconButton>
                                 </TableCell>
@@ -72,6 +79,13 @@ function AdminFiles() {
                     </TableBody>
                 </Table>
             </TableContainer>
+            <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)}>
+                <DialogTitle>"{deleteTarget?.name}" silinsin mi?</DialogTitle>
+                <DialogActions>
+                    <Button onClick={() => setDeleteTarget(null)}>Iptal</Button>
+                    <Button color="error" variant="contained" onClick={handleConfirmDelete}>Sil</Button>
+                </DialogActions>
+            </Dialog>
         </Layout>
     );
 }

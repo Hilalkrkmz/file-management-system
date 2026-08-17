@@ -14,10 +14,17 @@ import TableCell from "@mui/material/TableCell";
 import IconButton from "@mui/material/IconButton";
 import MuiLink from "@mui/material/Link";
 import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogActions from "@mui/material/DialogActions";
+import Button from "@mui/material/Button";
+import { adminDeleteUser } from "../api/adminApi";
 
 function AdminUsers() {
     const [users, setUsers] = useState([]);
     const [error, setError] = useState("");
+    const [deleteTarget, setDeleteTarget] = useState(null);
 
     const loadUsers = () => {
         getAllUsers()
@@ -37,6 +44,17 @@ function AdminUsers() {
             loadUsers();
         } catch (err) {
             setError(err.response?.data?.message || "Kota guncellenemedi");
+        }
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!deleteTarget) return;
+        try {
+            await adminDeleteUser(deleteTarget.id);
+            setDeleteTarget(null);
+            loadUsers();
+        } catch (err) {
+            setError(err.response?.data?.message || "Silinemedi");
         }
     };
 
@@ -70,12 +88,27 @@ function AdminUsers() {
                                     <IconButton size="small" onClick={() => handleQuotaChange(u.id)}>
                                         <EditIcon fontSize="small" />
                                     </IconButton>
+                                    <TableCell align="right">
+                                        <IconButton size="small" onClick={() => handleQuotaChange(u.id)}>
+                                            <EditIcon fontSize="small" />
+                                        </IconButton>
+                                        <IconButton size="small" color="error" onClick={() => setDeleteTarget(u)}>
+                                            <DeleteIcon fontSize="small" />
+                                        </IconButton>
+                                    </TableCell>
                                 </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
                 </Table>
             </TableContainer>
+            <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)}>
+                <DialogTitle>"{deleteTarget?.username}" kullanicisi silinsin mi? Bu islem geri alinamaz.</DialogTitle>
+                <DialogActions>
+                    <Button onClick={() => setDeleteTarget(null)}>Iptal</Button>
+                    <Button color="error" variant="contained" onClick={handleConfirmDelete}>Sil</Button>
+                </DialogActions>
+            </Dialog>
         </Layout>
     );
 }
