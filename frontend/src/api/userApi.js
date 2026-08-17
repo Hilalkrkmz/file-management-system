@@ -14,3 +14,6 @@ export const getProfilePhotoUrl = () => {
     const token = localStorage.getItem("token");
     return `/api/users/me/photo?t=${Date.now()}`;
 };
+
+export const changePassword = (currentPassword, newPassword) =>
+    axiosInstance.put("/users/me/password", { currentPassword, newPassword });

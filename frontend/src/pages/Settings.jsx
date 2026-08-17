@@ -12,6 +12,10 @@ import Box from "@mui/material/Box";
 import Alert from "@mui/material/Alert";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
+import { changePassword } from "../api/userApi";
+import Divider from "@mui/material/Divider";
+import LockIcon from "@mui/icons-material/Lock";
+import TextField from "@mui/material/TextField";
 
 function Settings() {
     const { user, logout } = useAuth();
@@ -20,6 +24,8 @@ function Settings() {
     const [photoUrl, setPhotoUrl] = useState(null);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
 
     const loadProfile = () => {
         getMyProfile().then((res) => {
@@ -28,7 +34,7 @@ function Settings() {
                 axiosInstance
                     .get("/users/me/photo", { responseType: "blob" })
                     .then((photoRes) => setPhotoUrl(URL.createObjectURL(photoRes.data)))
-                    .catch(() => {});
+                    .catch(() => { });
             }
         }).catch((err) => setError(err.response?.data?.message || "Yuklenemedi"));
     };
@@ -55,6 +61,19 @@ function Settings() {
     const handleLogout = () => {
         logout();
         navigate("/login");
+    };
+
+    const handleChangePassword = async () => {
+        setError("");
+        setSuccess("");
+        try {
+            await changePassword(currentPassword, newPassword);
+            setSuccess("Sifre basariyla degistirildi");
+            setCurrentPassword("");
+            setNewPassword("");
+        } catch (err) {
+            setError(err.response?.data?.message || "Sifre degistirilemedi");
+        }
     };
 
     return (
@@ -111,6 +130,36 @@ function Settings() {
                     onClick={handleLogout}
                 >
                     Cikis Yap
+                </Button>
+                <Divider sx={{ my: 3 }} />
+
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>Sifre Degistir</Typography>
+                <TextField
+                    fullWidth
+                    size="small"
+                    type="password"
+                    label="Mevcut sifre"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    sx={{ mb: 1 }}
+                />
+                <TextField
+                    fullWidth
+                    size="small"
+                    type="password"
+                    label="Yeni sifre"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    sx={{ mb: 1 }}
+                />
+                <Button
+                    variant="outlined"
+                    startIcon={<LockIcon />}
+                    onClick={handleChangePassword}
+                    disabled={!currentPassword || !newPassword}
+                    sx={{ mb: 3 }}
+                >
+                    Sifreyi Guncelle
                 </Button>
             </Paper>
         </Layout>
