@@ -27,6 +27,9 @@ import CardActionArea from "@mui/material/CardActionArea";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Snackbar from "@mui/material/Snackbar";
+import Avatar from "@mui/material/Avatar";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import FolderIcon from "@mui/icons-material/Folder";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -35,8 +38,9 @@ import LinkIcon from "@mui/icons-material/Link";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import EditIcon from "@mui/icons-material/Edit";
 import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
+import GridViewIcon from "@mui/icons-material/GridView";
+import ViewListIcon from "@mui/icons-material/ViewList";
 
-import Avatar from "@mui/material/Avatar";
 import "../styles/Dashboard.css";
 
 function Dashboard() {
@@ -51,10 +55,12 @@ function Dashboard() {
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [shareTarget, setShareTarget] = useState(null);
     const [shareEmail, setShareEmail] = useState("");
+    const [currentShares, setCurrentShares] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState(null);
     const [snackbarMessage, setSnackbarMessage] = useState("");
-    const [currentShares, setCurrentShares] = useState([]);
+    const [viewMode, setViewMode] = useState("grid");
+
     const [menuAnchor, setMenuAnchor] = useState(null);
     const [menuTarget, setMenuTarget] = useState(null);
     const [renameDialogOpen, setRenameDialogOpen] = useState(false);
@@ -87,7 +93,7 @@ function Dashboard() {
 
     useEffect(() => {
         if (shareTarget) {
-            getSharesForFile(shareTarget).then((res) => setCurrentShares(res.data)).catch(() => { });
+            getSharesForFile(shareTarget).then((res) => setCurrentShares(res.data)).catch(() => {});
         } else {
             setCurrentShares([]);
         }
@@ -155,6 +161,15 @@ function Dashboard() {
         }
     };
 
+    const handleRemoveShare = async (shareId) => {
+        try {
+            await removeShare(shareId);
+            setCurrentShares(currentShares.filter((s) => s.id !== shareId));
+        } catch (err) {
+            setError(err.response?.data?.message || "Paylasim kaldirilamadi");
+        }
+    };
+
     const handleCreateLink = async (fileId) => {
         try {
             const res = await createShareLink(fileId, "DOWNLOAD", 24);
@@ -177,15 +192,6 @@ function Dashboard() {
             setSearchResults(res.data);
         } catch (err) {
             setError(err.response?.data?.message || "Arama basarisiz");
-        }
-    };
-
-    const handleRemoveShare = async (shareId) => {
-        try {
-            await removeShare(shareId);
-            setCurrentShares(currentShares.filter((s) => s.id !== shareId));
-        } catch (err) {
-            setError(err.response?.data?.message || "Paylasim kaldirilamadi");
         }
     };
 
@@ -283,7 +289,15 @@ function Dashboard() {
             </div>
 
             <div className="section-header">
-                <div />
+                <ToggleButtonGroup
+                    size="small"
+                    value={viewMode}
+                    exclusive
+                    onChange={(e, newMode) => newMode && setViewMode(newMode)}
+                >
+                    <ToggleButton value="grid"><GridViewIcon fontSize="small" /></ToggleButton>
+                    <ToggleButton value="list"><ViewListIcon fontSize="small" /></ToggleButton>
+                </ToggleButtonGroup>
                 <div style={{ display: "flex", gap: 8 }}>
                     <Button variant="contained" onClick={() => setNewFolderDialogOpen(true)}>
                         + Yeni Klasor
@@ -329,24 +343,46 @@ function Dashboard() {
             ) : (
                 <>
                     {folders.length > 0 && (
-                        <div className="folder-grid">
-                            {folders.map((folder) => (
-                                <Card key={folder.id} className="folder-card" variant="outlined">
-                                    <CardActionArea onClick={() => handleFolderClick(folder)} className="folder-card">
-                                        <FolderIcon color="primary" />
-                                        <Typography noWrap>{folder.name}</Typography>
-                                    </CardActionArea>
-                                    <IconButton
-                                        size="small"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            openMenu(e, { type: "folder", id: folder.id, name: folder.name });
-                                        }}
-                                    >
-                                        <MoreVertIcon fontSize="small" />
-                                    </IconButton>
-                                </Card>
-                            ))}
+                        <div className={viewMode === "grid" ? "folder-grid" : ""}>
+                            {viewMode === "grid" ? (
+                                folders.map((folder) => (
+                                    <Card key={folder.id} className="folder-card" variant="outlined">
+                                        <CardActionArea onClick={() => handleFolderClick(folder)} className="folder-card">
+                                            <FolderIcon color="primary" />
+                                            <Typography noWrap>{folder.name}</Typography>
+                                        </CardActionArea>
+                                        <IconButton
+                                            size="small"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                openMenu(e, { type: "folder", id: folder.id, name: folder.name });
+                                            }}
+                                        >
+                                            <MoreVertIcon fontSize="small" />
+                                        </IconButton>
+                                    </Card>
+                                ))
+                            ) : (
+                                <List>
+                                    {folders.map((folder) => (
+                                        <ListItem
+                                            key={folder.id}
+                                            secondaryAction={
+                                                <IconButton onClick={(e) => openMenu(e, { type: "folder", id: folder.id, name: folder.name })}>
+                                                    <MoreVertIcon />
+                                                </IconButton>
+                                            }
+                                        >
+                                            <FolderIcon color="primary" style={{ marginRight: 8 }} />
+                                            <ListItemText
+                                                primary={folder.name}
+                                                onClick={() => handleFolderClick(folder)}
+                                                style={{ cursor: "pointer" }}
+                                            />
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            )}
                         </div>
                     )}
 
@@ -431,6 +467,7 @@ function Dashboard() {
                     >
                         Indirme linki olustur (24 saat gecerli)
                     </Button>
+
                     {currentShares.length > 0 && (
                         <>
                             <Divider sx={{ my: 2 }} />
@@ -450,10 +487,7 @@ function Dashboard() {
                                         <Avatar sx={{ width: 28, height: 28, mr: 1, fontSize: 14 }}>
                                             {s.sharedWithUsername?.[0]?.toUpperCase()}
                                         </Avatar>
-                                        <ListItemText
-                                            primary={s.sharedWithUsername}
-                                            secondary={s.permission}
-                                        />
+                                        <ListItemText primary={s.sharedWithUsername} secondary={s.permission} />
                                     </ListItem>
                                 ))}
                             </List>
