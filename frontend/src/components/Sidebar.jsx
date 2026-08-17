@@ -20,6 +20,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import "../styles/Sidebar.css";
 import { getMyProfile } from "../api/userApi";
 import axiosInstance from "../api/axiosInstance";
+import HistoryIcon from "@mui/icons-material/History";
 
 const DRAWER_WIDTH = 240;
 
@@ -50,10 +51,11 @@ function Sidebar() {
     }, []);
 
     const menuItems = [
-        { label: "Dosyalarim", icon: <FolderIcon />, path: "/dashboard" },
-        { label: "Benimle Paylasilanlar", icon: <PeopleIcon />, path: "/shared-with-me" },
-        { label: "Cop Kutusu", icon: <DeleteIcon />, path: "/trash" },
-    ];
+    { label: "Dosyalarim", icon: <FolderIcon />, path: "/dashboard" },
+    { label: "Son Erisilenler", icon: <HistoryIcon />, path: "/recent" },
+    { label: "Benimle Paylasilanlar", icon: <PeopleIcon />, path: "/shared-with-me" },
+    { label: "Cop Kutusu", icon: <DeleteIcon />, path: "/trash" },
+];
 
     if (user?.role === "ADMIN") {
         menuItems.push({ label: "Admin Paneli", icon: <AdminPanelSettingsIcon />, path: "/admin" });
