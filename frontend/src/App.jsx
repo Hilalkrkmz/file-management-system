@@ -9,6 +9,7 @@ import Trash from "./pages/Trash.jsx";
 import AdminUsers from "./pages/AdminUsers.jsx";
 import AdminFiles from "./pages/AdminFiles.jsx";
 import Settings from "./pages/Settings.jsx";
+import StorageOverview from "./pages/StorageOverview.jsx";
 
 function ProtectedRoute({ children }) {
     const { user } = useAuth();
@@ -84,6 +85,14 @@ function App() {
                     element={
                         <ProtectedRoute>
                             <Settings />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/storage"
+                    element={
+                        <ProtectedRoute>
+                            <StorageOverview />
                         </ProtectedRoute>
                     }
                 />

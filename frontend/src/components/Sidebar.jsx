@@ -89,7 +89,11 @@ function Sidebar() {
 
             <Box className="sidebar-footer">
                 {storage && (
-                    <Box className="sidebar-storage">
+                    <Box
+                        className="sidebar-storage"
+                        onClick={() => navigate("/storage")}
+                        sx={{ cursor: "pointer" }}
+                    >
                         <Typography variant="caption" color="text.secondary">
                             {storage.usedMb.toFixed(1)} MB / {storage.quotaMb} MB kullanildi
                         </Typography>
