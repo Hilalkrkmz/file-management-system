@@ -19,6 +19,7 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import TableSortLabel from "@mui/material/TableSortLabel";
 
 function AdminUsers() {
     const [users, setUsers] = useState([]);
@@ -26,6 +27,8 @@ function AdminUsers() {
     const [quotaTarget, setQuotaTarget] = useState(null);
     const [quotaValue, setQuotaValue] = useState("");
     const [deleteTarget, setDeleteTarget] = useState(null);
+    const [orderBy, setOrderBy] = useState("username");
+    const [order, setOrder] = useState("asc");
 
     const loadUsers = () => {
         getAllUsers()
@@ -64,6 +67,20 @@ function AdminUsers() {
         }
     };
 
+    const handleSort = (field) => {
+        const isAsc = orderBy === field && order === "asc";
+        setOrder(isAsc ? "desc" : "asc");
+        setOrderBy(field);
+    };
+
+    const sortedUsers = [...users].sort((a, b) => {
+        const aVal = a[orderBy];
+        const bVal = b[orderBy];
+        if (aVal < bVal) return order === "asc" ? -1 : 1;
+        if (aVal > bVal) return order === "asc" ? 1 : -1;
+        return 0;
+    });
+
     return (
         <Layout>
             <Typography variant="h4" gutterBottom>Kullanicilar</Typography>
@@ -73,15 +90,47 @@ function AdminUsers() {
                 <Table>
                     <TableHead>
                         <TableRow>
-                            <TableCell>Kullanici Adi</TableCell>
-                            <TableCell>Email</TableCell>
-                            <TableCell>Rol</TableCell>
-                            <TableCell>Kota (MB)</TableCell>
+                            <TableCell>
+                                <TableSortLabel
+                                    active={orderBy === "username"}
+                                    direction={orderBy === "username" ? order : "asc"}
+                                    onClick={() => handleSort("username")}
+                                >
+                                    Kullanici Adi
+                                </TableSortLabel>
+                            </TableCell>
+                            <TableCell>
+                                <TableSortLabel
+                                    active={orderBy === "email"}
+                                    direction={orderBy === "email" ? order : "asc"}
+                                    onClick={() => handleSort("email")}
+                                >
+                                    Email
+                                </TableSortLabel>
+                            </TableCell>
+                            <TableCell>
+                                <TableSortLabel
+                                    active={orderBy === "role"}
+                                    direction={orderBy === "role" ? order : "asc"}
+                                    onClick={() => handleSort("role")}
+                                >
+                                    Rol
+                                </TableSortLabel>
+                            </TableCell>
+                            <TableCell>
+                                <TableSortLabel
+                                    active={orderBy === "storageQuotaMb"}
+                                    direction={orderBy === "storageQuotaMb" ? order : "asc"}
+                                    onClick={() => handleSort("storageQuotaMb")}
+                                >
+                                    Kota (MB)
+                                </TableSortLabel>
+                            </TableCell>
                             <TableCell align="right">Islemler</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {users.map((u) => (
+                        {sortedUsers.map((u) => (
                             <TableRow key={u.id} hover>
                                 <TableCell>{u.username}</TableCell>
                                 <TableCell>{u.email}</TableCell>
