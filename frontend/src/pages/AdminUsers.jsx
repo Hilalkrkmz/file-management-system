@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { getAllUsers, updateUserQuota } from "../api/adminApi";
+import { getAllUsers, updateUserQuota, adminDeleteUser } from "../api/adminApi";
 import Layout from "../components/Layout.jsx";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
@@ -12,18 +11,20 @@ import TableBody from "@mui/material/TableBody";
 import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
 import IconButton from "@mui/material/IconButton";
-import MuiLink from "@mui/material/Link";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
+import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
-import { adminDeleteUser } from "../api/adminApi";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 function AdminUsers() {
     const [users, setUsers] = useState([]);
     const [error, setError] = useState("");
+    const [quotaTarget, setQuotaTarget] = useState(null);
+    const [quotaValue, setQuotaValue] = useState("");
     const [deleteTarget, setDeleteTarget] = useState(null);
 
     const loadUsers = () => {
@@ -36,11 +37,16 @@ function AdminUsers() {
         loadUsers();
     }, []);
 
-    const handleQuotaChange = async (userId) => {
-        const newQuota = window.prompt("Yeni kota (MB):");
-        if (!newQuota) return;
+    const handleOpenQuota = (user) => {
+        setQuotaTarget(user);
+        setQuotaValue(String(user.storageQuotaMb));
+    };
+
+    const handleConfirmQuota = async () => {
+        if (!quotaTarget || !quotaValue) return;
         try {
-            await updateUserQuota(userId, Number(newQuota));
+            await updateUserQuota(quotaTarget.id, Number(quotaValue));
+            setQuotaTarget(null);
             loadUsers();
         } catch (err) {
             setError(err.response?.data?.message || "Kota guncellenemedi");
@@ -60,9 +66,6 @@ function AdminUsers() {
 
     return (
         <Layout>
-            <MuiLink component={Link} to="/admin" sx={{ display: "inline-block", mb: 2 }}>
-                ← Admin Paneli
-            </MuiLink>
             <Typography variant="h4" gutterBottom>Kullanicilar</Typography>
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
@@ -74,7 +77,7 @@ function AdminUsers() {
                             <TableCell>Email</TableCell>
                             <TableCell>Rol</TableCell>
                             <TableCell>Kota (MB)</TableCell>
-                            <TableCell align="right">Islem</TableCell>
+                            <TableCell align="right">Islemler</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -85,23 +88,38 @@ function AdminUsers() {
                                 <TableCell>{u.role}</TableCell>
                                 <TableCell>{u.storageQuotaMb}</TableCell>
                                 <TableCell align="right">
-                                    <IconButton size="small" onClick={() => handleQuotaChange(u.id)}>
+                                    <IconButton size="small" onClick={() => handleOpenQuota(u)}>
                                         <EditIcon fontSize="small" />
                                     </IconButton>
-                                    <TableCell align="right">
-                                        <IconButton size="small" onClick={() => handleQuotaChange(u.id)}>
-                                            <EditIcon fontSize="small" />
-                                        </IconButton>
-                                        <IconButton size="small" color="error" onClick={() => setDeleteTarget(u)}>
-                                            <DeleteIcon fontSize="small" />
-                                        </IconButton>
-                                    </TableCell>
+                                    <IconButton size="small" color="error" onClick={() => setDeleteTarget(u)}>
+                                        <DeleteIcon fontSize="small" />
+                                    </IconButton>
                                 </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
                 </Table>
             </TableContainer>
+
+            <Dialog open={!!quotaTarget} onClose={() => setQuotaTarget(null)}>
+                <DialogTitle>"{quotaTarget?.username}" icin kota guncelle</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        autoFocus
+                        fullWidth
+                        type="number"
+                        label="Kota (MB)"
+                        value={quotaValue}
+                        onChange={(e) => setQuotaValue(e.target.value)}
+                        style={{ marginTop: 8 }}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setQuotaTarget(null)}>Iptal</Button>
+                    <Button variant="contained" onClick={handleConfirmQuota}>Kaydet</Button>
+                </DialogActions>
+            </Dialog>
+
             <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)}>
                 <DialogTitle>"{deleteTarget?.username}" kullanicisi silinsin mi? Bu islem geri alinamaz.</DialogTitle>
                 <DialogActions>
