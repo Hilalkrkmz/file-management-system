@@ -40,6 +40,9 @@ import EditIcon from "@mui/icons-material/Edit";
 import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
 import GridViewIcon from "@mui/icons-material/GridView";
 import ViewListIcon from "@mui/icons-material/ViewList";
+import { toggleStar } from "../api/fileApi";
+import StarIcon from "@mui/icons-material/Star";
+import StarBorderIcon from "@mui/icons-material/StarBorder";
 
 import "../styles/Dashboard.css";
 

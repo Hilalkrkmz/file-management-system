@@ -11,6 +11,7 @@ import AdminFiles from "./pages/AdminFiles.jsx";
 import Settings from "./pages/Settings.jsx";
 import StorageOverview from "./pages/StorageOverview.jsx";
 import Recent from "./pages/Recent.jsx";
+import Starred from "./pages/Starred.jsx";
 
 function ProtectedRoute({ children }) {
     const { user } = useAuth();
@@ -102,6 +103,14 @@ function App() {
                     element={
                         <ProtectedRoute>
                             <Recent />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/starred"
+                    element={
+                        <ProtectedRoute>
+                            <Starred />
                         </ProtectedRoute>
                     }
                 />

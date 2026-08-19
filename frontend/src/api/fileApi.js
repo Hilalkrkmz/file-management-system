@@ -50,3 +50,6 @@ export const renameFile = (id, name) => axiosInstance.patch(`/files/${id}`, { na
 export const permanentDeleteFile = (id) => axiosInstance.delete(`/files/${id}/permanent`);
 
 export const getRecentFiles = () => axiosInstance.get("/files/recent");
+
+export const toggleStar = (id) => axiosInstance.post(`/files/${id}/star`);
+export const getStarredFiles = () => axiosInstance.get("/files/starred");

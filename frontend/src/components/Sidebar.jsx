@@ -21,6 +21,7 @@ import "../styles/Sidebar.css";
 import { getMyProfile } from "../api/userApi";
 import axiosInstance from "../api/axiosInstance";
 import HistoryIcon from "@mui/icons-material/History";
+import StarIcon from "@mui/icons-material/Star";
 
 const DRAWER_WIDTH = 240;
 
@@ -55,6 +56,7 @@ function Sidebar() {
     { label: "Son Erisilenler", icon: <HistoryIcon />, path: "/recent" },
     { label: "Benimle Paylasilanlar", icon: <PeopleIcon />, path: "/shared-with-me" },
     { label: "Cop Kutusu", icon: <DeleteIcon />, path: "/trash" },
+    { label: "Yildizli", icon: <StarIcon />, path: "/starred" },
 ];
 
     if (user?.role === "ADMIN") {
