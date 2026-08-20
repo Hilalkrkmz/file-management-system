@@ -103,4 +103,19 @@ public class FileController {
         fileService.permanentlyDeleteFile(authentication.getName(), id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/recent")
+    public ResponseEntity<List<FileResponse>> recent(Authentication authentication) {
+        return ResponseEntity.ok(fileService.listRecent(authentication.getName()));
+    }
+
+    @PostMapping("/{id}/star")
+    public ResponseEntity<FileResponse> toggleStar(@PathVariable UUID id, Authentication authentication) {
+        return ResponseEntity.ok(fileService.toggleStar(authentication.getName(), id));
+    }
+
+    @GetMapping("/starred")
+    public ResponseEntity<List<FileResponse>> starred(Authentication authentication) {
+        return ResponseEntity.ok(fileService.listStarred(authentication.getName()));
+    }
 }

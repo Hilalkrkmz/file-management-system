@@ -3,6 +3,7 @@ package com.filemanagement.service;
 import com.filemanagement.dto.UserProfileResponse;
 import com.filemanagement.entity.User;
 import com.filemanagement.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -13,10 +14,13 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final FileStorageService storageService;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, FileStorageService storageService) {
+    public UserService(UserRepository userRepository, FileStorageService storageService,
+                       PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.storageService = storageService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     private User getUser(String username) {
@@ -56,5 +60,16 @@ public class UserService {
             throw new IllegalArgumentException("Profil fotografi yok");
         }
         return storageService.load(user.getProfilePhotoPath());
+    }
+
+    public void changePassword(String username, String currentPassword, String newPassword) {
+        User user = getUser(username);
+
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw new IllegalArgumentException("Mevcut sifre yanlis");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
 }

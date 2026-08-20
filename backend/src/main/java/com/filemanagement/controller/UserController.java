@@ -1,7 +1,9 @@
 package com.filemanagement.controller;
 
+import com.filemanagement.dto.ChangePasswordRequest;
 import com.filemanagement.dto.UserProfileResponse;
 import com.filemanagement.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -37,5 +39,12 @@ public class UserController {
         return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_JPEG)
                 .body(new ByteArrayResource(data));
+    }
+
+    @PutMapping("/me/password")
+    public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request,
+                                               Authentication authentication) {
+        userService.changePassword(authentication.getName(), request.getCurrentPassword(), request.getNewPassword());
+        return ResponseEntity.ok().build();
     }
 }

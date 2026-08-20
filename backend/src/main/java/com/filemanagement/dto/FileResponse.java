@@ -14,5 +14,8 @@ public class FileResponse {
     private String extension;
     private Long size;
     private UUID folderId;
+    private String folderName;
     private LocalDateTime uploadedAt;
+    private LocalDateTime lastAccessedAt;
+    private boolean starred;
 }

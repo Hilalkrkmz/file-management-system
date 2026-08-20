@@ -164,6 +164,8 @@ public class FileService {
     public byte[] downloadFile(String username, UUID fileId) {
         User user = getUser(username);
         com.filemanagement.entity.File file = getOwnedOrSharedFile(user, fileId);
+        file.setLastAccessedAt(LocalDateTime.now());
+        fileRepository.save(file);
         return storageService.load(file.getStoragePath());
     }
 
@@ -232,7 +234,10 @@ public class FileService {
                 file.getExtension(),
                 file.getSize(),
                 file.getFolder().getId(),
-                file.getUploadedAt()
+                file.getFolder().getName(),
+                file.getUploadedAt(),
+                file.getLastAccessedAt(),
+                file.isStarred()
         );
     }
 
@@ -298,4 +303,34 @@ public class FileService {
         storageService.delete(file.getStoragePath());
         fileRepository.delete(file);
     }
+
+    public List<FileResponse> listRecent(String username) {
+        User owner = getUser(username);
+        return fileRepository.findTop10ByOwnerAndIsDeletedFalseOrderByLastAccessedAtDesc(owner)
+                .stream()
+                .filter(f -> f.getLastAccessedAt() != null)
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    public FileResponse toggleStar(String username, UUID fileId) {
+        User owner = getUser(username);
+        com.filemanagement.entity.File file = fileRepository.findById(fileId)
+                .orElseThrow(() -> new IllegalArgumentException("Dosya bulunamadi"));
+
+        if (!file.getOwner().getId().equals(owner.getId())) {
+            throw new IllegalArgumentException("Bu dosya uzerinde yetkiniz yok");
+        }
+
+        file.setStarred(!file.isStarred());
+        fileRepository.save(file);
+        return toResponse(file);
+    }
+
+    public List<FileResponse> listStarred(String username) {
+        User owner = getUser(username);
+        return fileRepository.findByOwnerAndIsStarredTrueAndIsDeletedFalse(owner)
+                .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
 }
