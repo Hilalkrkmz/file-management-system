@@ -96,7 +96,7 @@ function Dashboard() {
 
     useEffect(() => {
         if (shareTarget) {
-            getSharesForFile(shareTarget).then((res) => setCurrentShares(res.data)).catch(() => {});
+            getSharesForFile(shareTarget).then((res) => setCurrentShares(res.data)).catch(() => { });
         } else {
             setCurrentShares([]);
         }
@@ -248,6 +248,16 @@ function Dashboard() {
         }
     };
 
+    const handleToggleStar = async (fileId) => {
+        try {
+            await toggleStar(fileId);
+            loadContents(currentFolderId);
+        } catch (err) {
+            setError(err.response?.data?.message || "Islem basarisiz");
+        }
+        closeMenu();
+    };
+
     return (
         <Layout>
             <div className="dashboard-topbar">
@@ -349,7 +359,7 @@ function Dashboard() {
                         <div className={viewMode === "grid" ? "folder-grid" : ""}>
                             {viewMode === "grid" ? (
                                 folders.map((folder) => (
-                                    <Card key={folder.id} className="folder-card" variant="outlined">
+                                    <Card key={folder.id} className="folder-card-outer" variant="outlined">
                                         <CardActionArea onClick={() => handleFolderClick(folder)} className="folder-card">
                                             <FolderIcon color="primary" />
                                             <Typography noWrap>{folder.name}</Typography>
@@ -394,7 +404,7 @@ function Dashboard() {
                             <ListItem
                                 key={file.id}
                                 secondaryAction={
-                                    <IconButton onClick={(e) => openMenu(e, { type: "file", id: file.id, name: file.name })}>
+                                    <IconButton onClick={(e) => openMenu(e, { type: "file", id: file.id, name: file.name, starred: file.starred })}>
                                         <MoreVertIcon />
                                     </IconButton>
                                 }
@@ -546,6 +556,12 @@ function Dashboard() {
                 <MenuItem onClick={handleOpenMove}>
                     <ListItemIcon><DriveFileMoveIcon fontSize="small" /></ListItemIcon>
                     Tasi
+                </MenuItem>
+                <MenuItem onClick={() => handleToggleStar(menuTarget.id)}>
+                    <ListItemIcon>
+                        {menuTarget?.starred ? <StarIcon fontSize="small" sx={{ color: "#FFB400" }} /> : <StarBorderIcon fontSize="small" />}
+                    </ListItemIcon>
+                    {menuTarget?.starred ? "Yildizi Kaldir" : "Yildizla"}
                 </MenuItem>
                 <MenuItem onClick={() => { setDeleteTarget(menuTarget); closeMenu(); }}>
                     <ListItemIcon><DeleteIcon fontSize="small" /></ListItemIcon>
