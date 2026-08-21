@@ -9,6 +9,8 @@ import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import StorageIcon from "@mui/icons-material/Storage";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import DonutLargeIcon from "@mui/icons-material/DonutLarge";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 
 function StorageOverview() {
     const [storage, setStorage] = useState(null);
@@ -71,12 +73,14 @@ function StorageOverview() {
                 </Grid>
                 <Grid item xs={4}>
                     <Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
+                        <DonutLargeIcon color="action" />
                         <Typography variant="h6">{storage.usedMb.toFixed(1)} MB</Typography>
                         <Typography variant="body2" color="text.secondary">Kullanilan</Typography>
                     </Paper>
                 </Grid>
                 <Grid item xs={4}>
                     <Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
+                        <CheckCircleOutlineIcon color="action" />
                         <Typography variant="h6">{remainingMb.toFixed(1)} MB</Typography>
                         <Typography variant="body2" color="text.secondary">Kalan</Typography>
                     </Paper>

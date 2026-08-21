@@ -72,11 +72,14 @@ public class FileService {
     public FileResponse uploadFile(String username, UUID folderId, MultipartFile multipartFile) {
         User owner = getUser(username);
 
-        Folder folder = folderRepository.findById(folderId)
-                .orElseThrow(() -> new IllegalArgumentException("Klasor bulunamadi"));
+        Folder folder = null;
+        if (folderId != null) {
+            folder = folderRepository.findById(folderId)
+                    .orElseThrow(() -> new IllegalArgumentException("Klasor bulunamadi"));
 
-        if (!folder.getOwner().getId().equals(owner.getId())) {
-            throw new IllegalArgumentException("Bu klasore erisim yetkiniz yok");
+            if (!folder.getOwner().getId().equals(owner.getId())) {
+                throw new IllegalArgumentException("Bu klasore erisim yetkiniz yok");
+            }
         }
 
         String originalName = multipartFile.getOriginalFilename();
@@ -112,7 +115,7 @@ public class FileService {
                     + owner.getStorageQuotaMb() + "MB)");
         }
 
-        String finalName = resolveUniqueName(folder, originalName);
+        String finalName = resolveUniqueName(owner, folder, originalName);
 
         String storageKey = UUID.randomUUID() + "_" + finalName;
         String storagePath = storageService.store(multipartFile, storageKey);
@@ -129,7 +132,7 @@ public class FileService {
         return toResponse(file);
     }
 
-    private String resolveUniqueName(Folder folder, String originalName) {
+    private String resolveUniqueName(User owner, Folder folder, String originalName) {
         String base = originalName;
         String ext = "";
         int dotIndex = originalName.lastIndexOf('.');
@@ -140,15 +143,27 @@ public class FileService {
 
         String candidate = originalName;
         int counter = 1;
-        while (fileRepository.findByFolderAndNameAndIsDeletedFalse(folder, candidate).isPresent()) {
+        while (nameExists(owner, folder, candidate)) {
             candidate = base + "(" + counter + ")" + ext;
             counter++;
         }
         return candidate;
     }
 
+    private boolean nameExists(User owner, Folder folder, String name) {
+        if (folder != null) {
+            return fileRepository.findByFolderAndNameAndIsDeletedFalse(folder, name).isPresent();
+        }
+        return fileRepository.findByOwnerAndFolderIsNullAndNameAndIsDeletedFalse(owner, name).isPresent();
+    }
+
     public List<FileResponse> listFiles(String username, UUID folderId) {
         User owner = getUser(username);
+
+        if (folderId == null) {
+            return fileRepository.findByOwnerAndFolderIsNullAndIsDeletedFalse(owner)
+                    .stream().map(this::toResponse).collect(Collectors.toList());
+        }
 
         Folder folder = folderRepository.findById(folderId)
                 .orElseThrow(() -> new IllegalArgumentException("Klasor bulunamadi"));
@@ -228,13 +243,14 @@ public class FileService {
     }
 
     private FileResponse toResponse(com.filemanagement.entity.File file) {
+        Folder folder = file.getFolder();
         return new FileResponse(
                 file.getId(),
                 file.getName(),
                 file.getExtension(),
                 file.getSize(),
-                file.getFolder().getId(),
-                file.getFolder().getName(),
+                folder != null ? folder.getId() : null,
+                folder != null ? folder.getName() : "Ana Dizin",
                 file.getUploadedAt(),
                 file.getLastAccessedAt(),
                 file.isStarred()

@@ -15,11 +15,15 @@ public interface FileRepository extends JpaRepository<File, UUID> {
 
     List<File> findByFolderAndIsDeletedFalse(Folder folder);
 
+    List<File> findByOwnerAndFolderIsNullAndIsDeletedFalse(User owner);
+
     List<File> findByOwnerAndIsDeletedFalse(User owner);
 
     List<File> findByOwnerAndNameContainingIgnoreCaseAndIsDeletedFalse(User owner, String name);
 
     Optional<File> findByFolderAndNameAndIsDeletedFalse(Folder folder, String name);
+
+    Optional<File> findByOwnerAndFolderIsNullAndNameAndIsDeletedFalse(User owner, String name);
 
     List<File> findByOwnerAndIsDeletedTrue(User owner);
 

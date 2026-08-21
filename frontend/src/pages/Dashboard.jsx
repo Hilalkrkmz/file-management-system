@@ -81,12 +81,8 @@ function Dashboard() {
             const foldersRes = await getFolders(folderId);
             setFolders(foldersRes.data);
 
-            if (folderId) {
-                const filesRes = await getFiles(folderId);
-                setFiles(filesRes.data);
-            } else {
-                setFiles([]);
-            }
+            const filesRes = await getFiles(folderId);
+            setFiles(filesRes.data);
         } catch (err) {
             setError(err.response?.data?.message || "Icerik yuklenemedi");
         } finally {
@@ -146,7 +142,7 @@ function Dashboard() {
 
     const handleFileUpload = async (e) => {
         const file = e.target.files[0];
-        if (!file || !currentFolderId) return;
+        if (!file) return;
         try {
             await uploadFile(currentFolderId, file);
             loadContents(currentFolderId);
@@ -306,12 +302,10 @@ function Dashboard() {
                             <ListItemIcon><CreateNewFolderIcon fontSize="small" /></ListItemIcon>
                             Yeni Klasor
                         </MenuItem>
-                        {currentFolderId && (
-                            <MenuItem onClick={() => { document.getElementById("fileInput").click(); setNewMenuAnchor(null); }}>
-                                <ListItemIcon><UploadFileIcon fontSize="small" /></ListItemIcon>
-                                Dosya Yukle
-                            </MenuItem>
-                        )}
+                        <MenuItem onClick={() => { document.getElementById("fileInput").click(); setNewMenuAnchor(null); }}>
+                            <ListItemIcon><UploadFileIcon fontSize="small" /></ListItemIcon>
+                            Dosya Yukle
+                        </MenuItem>
                     </Menu>
                     <input
                         type="file"
@@ -350,14 +344,32 @@ function Dashboard() {
                         <div className={viewMode === "grid" ? "folder-grid" : "folder-list"}>
                             {viewMode === "grid" ? (
                                 folders.map((folder) => (
-                                    <Card key={folder.id} className="folder-card-outer" variant="outlined">
-                                        <CardActionArea onClick={() => handleFolderClick(folder)} className="folder-card">
+                                    <Card
+                                        key={folder.id}
+                                        variant="outlined"
+                                        sx={{
+                                            position: "relative",
+                                            transition: "box-shadow 0.2s",
+                                            "&:hover": { boxShadow: "0 4px 12px rgba(0,0,0,0.1)" },
+                                        }}
+                                    >
+                                        <CardActionArea
+                                            onClick={() => handleFolderClick(folder)}
+                                            sx={{
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                alignItems: "center",
+                                                gap: 1.5,
+                                                padding: "28px 16px 20px",
+                                                textAlign: "center",
+                                            }}
+                                        >
                                             <FolderIcon color="primary" sx={{ fontSize: 40 }} />
-                                            <Typography noWrap>{folder.name}</Typography>
+                                            <Typography noWrap sx={{ maxWidth: "100%" }}>{folder.name}</Typography>
                                         </CardActionArea>
                                         <IconButton
                                             size="small"
-                                            className="folder-card-menu-btn"
+                                            sx={{ position: "absolute", top: 8, right: 8 }}
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 openMenu(e, { type: "folder", id: folder.id, name: folder.name });

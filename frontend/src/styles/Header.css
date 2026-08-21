@@ -3,6 +3,11 @@
     align-items: center;
     gap: 16px;
     margin-bottom: 24px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #F5F6FA;
+    padding: 8px 0;
 }
 
 .app-header-search {

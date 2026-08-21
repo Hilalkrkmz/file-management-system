@@ -28,14 +28,14 @@ public class FileController {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<FileResponse> upload(@RequestParam UUID folderId,
+    public ResponseEntity<FileResponse> upload(@RequestParam(required = false) UUID folderId,
                                                @RequestParam("file") MultipartFile file,
                                                Authentication authentication) {
         return ResponseEntity.ok(fileService.uploadFile(authentication.getName(), folderId, file));
     }
 
     @GetMapping
-    public ResponseEntity<List<FileResponse>> list(@RequestParam UUID folderId,
+    public ResponseEntity<List<FileResponse>> list(@RequestParam(required = false) UUID folderId,
                                                    Authentication authentication) {
         return ResponseEntity.ok(fileService.listFiles(authentication.getName(), folderId));
     }

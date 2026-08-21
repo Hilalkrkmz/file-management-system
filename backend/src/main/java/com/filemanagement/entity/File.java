@@ -32,7 +32,7 @@ public class File {
     private String storagePath;
 
     @ManyToOne
-    @JoinColumn(name = "folder_id", nullable = false)
+    @JoinColumn(name = "folder_id", nullable = true)
     private Folder folder;
 
     @ManyToOne
