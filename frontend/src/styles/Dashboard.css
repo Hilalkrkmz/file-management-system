@@ -16,6 +16,10 @@
     margin-bottom: 32px;
 }
 
+.folder-list {
+    margin-bottom: 16px;
+}
+
 .folder-card-outer {
     display: flex;
     align-items: center;

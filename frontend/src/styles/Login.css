@@ -17,8 +17,8 @@
     margin-top: 8px;
 }
 
-body {
-    margin: 0;
-    background-color: #f5f5f5;
-    font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }

@@ -30,7 +30,7 @@ function Register() {
     return (
         <Paper elevation={3} className="auth-container">
             <Typography variant="h5" className="auth-title">Kayit Ol</Typography>
-            <form onSubmit={handleSubmit} className="auth-container" style={{ margin: 0, padding: 0 }}>
+            <form onSubmit={handleSubmit} className="auth-form">
                 <TextField
                     label="Kullanici adi"
                     value={username}

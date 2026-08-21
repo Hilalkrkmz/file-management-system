@@ -25,6 +25,7 @@ import FolderIcon from "@mui/icons-material/Folder";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import RestoreIcon from "@mui/icons-material/Restore";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
+import "../styles/Trash.css";
 
 function Trash() {
     const [folders, setFolders] = useState([]);

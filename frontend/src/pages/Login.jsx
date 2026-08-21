@@ -34,7 +34,7 @@ function Login() {
             {location.state?.registered && (
                 <Alert severity="success" sx={{ mb: 1 }}>Kayit basarili, simdi giris yapabilirsin.</Alert>
             )}
-            <form onSubmit={handleSubmit} className="auth-container" style={{ margin: 0, padding: 0 }}>
+            <form onSubmit={handleSubmit} className="auth-form">
                 <TextField
                     label="Email"
                     type="email"

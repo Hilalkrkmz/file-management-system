@@ -356,7 +356,7 @@ function Dashboard() {
             ) : (
                 <>
                     {folders.length > 0 && (
-                        <div className={viewMode === "grid" ? "folder-grid" : ""}>
+                        <div className={viewMode === "grid" ? "folder-grid" : "folder-list"}>
                             {viewMode === "grid" ? (
                                 folders.map((folder) => (
                                     <Card key={folder.id} className="folder-card-outer" variant="outlined">
