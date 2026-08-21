@@ -43,6 +43,9 @@ import ViewListIcon from "@mui/icons-material/ViewList";
 import { toggleStar } from "../api/fileApi";
 import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 
 import "../styles/Dashboard.css";
 
@@ -69,6 +72,7 @@ function Dashboard() {
     const [renameDialogOpen, setRenameDialogOpen] = useState(false);
     const [renameValue, setRenameValue] = useState("");
     const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+    const [newMenuAnchor, setNewMenuAnchor] = useState(null);
 
     const loadContents = async (folderId) => {
         setLoading(true);
@@ -184,8 +188,7 @@ function Dashboard() {
         }
     };
 
-    const handleSearch = async (e) => {
-        e.preventDefault();
+    const handleSearch = async () => {
         if (!searchQuery.trim()) {
             setSearchResults(null);
             return;
@@ -196,6 +199,11 @@ function Dashboard() {
         } catch (err) {
             setError(err.response?.data?.message || "Arama basarisiz");
         }
+    };
+
+    const handleClearSearch = () => {
+        setSearchQuery("");
+        setSearchResults(null);
     };
 
     const openMenu = (e, target) => {
@@ -259,7 +267,13 @@ function Dashboard() {
     };
 
     return (
-        <Layout>
+        <Layout
+            searchValue={searchQuery}
+            onSearchChange={setSearchQuery}
+            onSearchSubmit={handleSearch}
+            onClearSearch={handleClearSearch}
+            searchPlaceholder="Dosya ara..."
+        >
             <div className="dashboard-topbar">
                 <div>
                     <Typography variant="h4" className="dashboard-title">Dosyalarim</Typography>
@@ -279,55 +293,32 @@ function Dashboard() {
                     )}
                 </div>
 
-                <form onSubmit={handleSearch} style={{ display: "flex", gap: 8 }}>
-                    <TextField
-                        size="small"
-                        placeholder="Dosya ara..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                    <Button type="submit" variant="outlined">Ara</Button>
-                    {searchResults && (
-                        <Button
-                            variant="text"
-                            onClick={() => {
-                                setSearchResults(null);
-                                setSearchQuery("");
-                            }}
-                        >
-                            Temizle
-                        </Button>
-                    )}
-                </form>
-            </div>
-
-            <div className="section-header">
-                <ToggleButtonGroup
-                    size="small"
-                    value={viewMode}
-                    exclusive
-                    onChange={(e, newMode) => newMode && setViewMode(newMode)}
-                >
-                    <ToggleButton value="grid"><GridViewIcon fontSize="small" /></ToggleButton>
-                    <ToggleButton value="list"><ViewListIcon fontSize="small" /></ToggleButton>
-                </ToggleButtonGroup>
-                <div style={{ display: "flex", gap: 8 }}>
-                    <Button variant="contained" onClick={() => setNewFolderDialogOpen(true)}>
-                        + Yeni Klasor
+                <div>
+                    <Button
+                        variant="contained"
+                        endIcon={<ArrowDropDownIcon />}
+                        onClick={(e) => setNewMenuAnchor(e.currentTarget)}
+                    >
+                        + New
                     </Button>
-                    {currentFolderId && (
-                        <>
-                            <input
-                                type="file"
-                                onChange={handleFileUpload}
-                                style={{ display: "none" }}
-                                id="fileInput"
-                            />
-                            <Button variant="outlined" onClick={() => document.getElementById("fileInput").click()}>
-                                + Dosya Yukle
-                            </Button>
-                        </>
-                    )}
+                    <Menu anchorEl={newMenuAnchor} open={!!newMenuAnchor} onClose={() => setNewMenuAnchor(null)}>
+                        <MenuItem onClick={() => { setNewFolderDialogOpen(true); setNewMenuAnchor(null); }}>
+                            <ListItemIcon><CreateNewFolderIcon fontSize="small" /></ListItemIcon>
+                            Yeni Klasor
+                        </MenuItem>
+                        {currentFolderId && (
+                            <MenuItem onClick={() => { document.getElementById("fileInput").click(); setNewMenuAnchor(null); }}>
+                                <ListItemIcon><UploadFileIcon fontSize="small" /></ListItemIcon>
+                                Dosya Yukle
+                            </MenuItem>
+                        )}
+                    </Menu>
+                    <input
+                        type="file"
+                        onChange={handleFileUpload}
+                        style={{ display: "none" }}
+                        id="fileInput"
+                    />
                 </div>
             </div>
 
@@ -361,11 +352,12 @@ function Dashboard() {
                                 folders.map((folder) => (
                                     <Card key={folder.id} className="folder-card-outer" variant="outlined">
                                         <CardActionArea onClick={() => handleFolderClick(folder)} className="folder-card">
-                                            <FolderIcon color="primary" />
+                                            <FolderIcon color="primary" sx={{ fontSize: 40 }} />
                                             <Typography noWrap>{folder.name}</Typography>
                                         </CardActionArea>
                                         <IconButton
                                             size="small"
+                                            className="folder-card-menu-btn"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 openMenu(e, { type: "folder", id: folder.id, name: folder.name });
@@ -399,21 +391,56 @@ function Dashboard() {
                         </div>
                     )}
 
-                    <List>
-                        {files.map((file) => (
-                            <ListItem
-                                key={file.id}
-                                secondaryAction={
-                                    <IconButton onClick={(e) => openMenu(e, { type: "file", id: file.id, name: file.name, starred: file.starred })}>
-                                        <MoreVertIcon />
+                    <div className="section-header">
+                        <Typography variant="subtitle1" className="section-label">Dosyalar</Typography>
+                        <ToggleButtonGroup
+                            size="small"
+                            value={viewMode}
+                            exclusive
+                            onChange={(e, newMode) => newMode && setViewMode(newMode)}
+                        >
+                            <ToggleButton value="grid"><GridViewIcon fontSize="small" /></ToggleButton>
+                            <ToggleButton value="list"><ViewListIcon fontSize="small" /></ToggleButton>
+                        </ToggleButtonGroup>
+                    </div>
+
+                    {viewMode === "grid" ? (
+                        <div className="file-grid">
+                            {files.map((file) => (
+                                <div className="file-row" key={file.id}>
+                                    <span className="file-row-icon">{getFileIcon(file.extension)}</span>
+                                    <div className="file-row-info">
+                                        <Typography variant="body2" noWrap className="file-row-name">{file.name}</Typography>
+                                        <Typography variant="caption" color="text.secondary" noWrap>
+                                            {(file.size / 1024).toFixed(1)} KB
+                                        </Typography>
+                                    </div>
+                                    <IconButton
+                                        size="small"
+                                        onClick={(e) => openMenu(e, { type: "file", id: file.id, name: file.name, starred: file.starred })}
+                                    >
+                                        <MoreVertIcon fontSize="small" />
                                     </IconButton>
-                                }
-                            >
-                                <span style={{ marginRight: 8, display: "flex" }}>{getFileIcon(file.extension)}</span>
-                                <ListItemText primary={file.name} secondary={`${(file.size / 1024).toFixed(1)} KB`} />
-                            </ListItem>
-                        ))}
-                    </List>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <List>
+                            {files.map((file) => (
+                                <ListItem
+                                    key={file.id}
+                                    secondaryAction={
+                                        <IconButton onClick={(e) => openMenu(e, { type: "file", id: file.id, name: file.name, starred: file.starred })}>
+                                            <MoreVertIcon />
+                                        </IconButton>
+                                    }
+                                >
+                                    <span style={{ marginRight: 8, display: "flex" }}>{getFileIcon(file.extension)}</span>
+                                    <ListItemText primary={file.name} secondary={`${(file.size / 1024).toFixed(1)} KB`} />
+                                </ListItem>
+                            ))}
+                        </List>
+                    )}
                 </>
             )}
 

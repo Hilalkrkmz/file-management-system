@@ -11,7 +11,7 @@
 
 .folder-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 16px;
     margin-bottom: 32px;
 }
@@ -21,8 +21,7 @@
 }
 
 .folder-card-outer {
-    display: flex;
-    align-items: center;
+    position: relative;
     transition: box-shadow 0.2s;
 }
 
@@ -32,12 +31,20 @@
 
 .folder-card {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 10px;
-    padding: 16px;
-    flex: 1;
+    gap: 12px;
+    padding: 28px 16px 20px;
+    width: 100%;
     min-width: 0;
     cursor: pointer;
+    text-align: center;
+}
+
+.folder-card-menu-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
 }
 
 .section-header {
@@ -47,6 +54,40 @@
     margin-bottom: 12px;
 }
 
+.section-label {
+    font-weight: 600;
+}
+
 .breadcrumb-row {
     margin-bottom: 8px;
+}
+
+.file-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px 24px;
+}
+
+.file-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    background: #fff;
+}
+
+.file-row-icon {
+    display: flex;
+    flex-shrink: 0;
+}
+
+.file-row-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.file-row-name {
+    font-weight: 500;
 }

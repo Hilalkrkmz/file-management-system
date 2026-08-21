@@ -1,0 +1,29 @@
+.app-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.app-header-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    max-width: 480px;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 24px;
+    padding: 6px 16px;
+}
+
+.app-header-search-icon {
+    color: rgba(0, 0, 0, 0.4);
+    flex-shrink: 0;
+}
+
+.app-header-search-input {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.9rem;
+}
