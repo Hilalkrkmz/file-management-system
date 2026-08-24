@@ -82,14 +82,14 @@ public class ShareService {
         notificationService.notifyFileShared(target, sharer.getUsername(), file.getName());
 
         return new FileShareResponse(share.getId(), file.getId(), file.getName(),
-                sharer.getUsername(), target.getUsername(), share.getPermission());
+                sharer.getUsername(), target.getUsername(), share.getPermission(), share.getCreatedAt());
     }
 
     public List<FileShareResponse> listSharedWithMe(String username) {
         User user = getUser(username);
         return fileShareRepository.findBySharedWith(user).stream()
                 .map(s -> new FileShareResponse(s.getId(), s.getFile().getId(), s.getFile().getName(),
-                        s.getSharedBy().getUsername(), s.getSharedWith().getUsername(), s.getPermission()))
+                        s.getSharedBy().getUsername(), s.getSharedWith().getUsername(), s.getPermission(), s.getCreatedAt()))
                 .collect(Collectors.toList());
     }
 
@@ -139,7 +139,7 @@ public class ShareService {
 
         return fileShareRepository.findByFile(file).stream()
                 .map(s -> new FileShareResponse(s.getId(), s.getFile().getId(), s.getFile().getName(),
-                        s.getSharedBy().getUsername(), s.getSharedWith().getUsername(), s.getPermission()))
+                        s.getSharedBy().getUsername(), s.getSharedWith().getUsername(), s.getPermission(), s.getCreatedAt()))
                 .collect(Collectors.toList());
     }
 
@@ -189,14 +189,14 @@ public class ShareService {
         notificationService.notifyFolderShared(target, sharer.getUsername(), folder.getName());
 
         return new FolderShareResponse(share.getId(), folder.getId(), folder.getName(),
-                sharer.getUsername(), target.getUsername(), share.getPermission());
+                sharer.getUsername(), target.getUsername(), share.getPermission(), share.getCreatedAt());
     }
 
     public List<FolderShareResponse> listFoldersSharedWithMe(String username) {
         User user = getUser(username);
         return folderShareRepository.findBySharedWith(user).stream()
                 .map(s -> new FolderShareResponse(s.getId(), s.getFolder().getId(), s.getFolder().getName(),
-                        s.getSharedBy().getUsername(), s.getSharedWith().getUsername(), s.getPermission()))
+                        s.getSharedBy().getUsername(), s.getSharedWith().getUsername(), s.getPermission(), s.getCreatedAt()))
                 .collect(Collectors.toList());
     }
 
@@ -206,7 +206,7 @@ public class ShareService {
 
         return folderShareRepository.findByFolder(folder).stream()
                 .map(s -> new FolderShareResponse(s.getId(), s.getFolder().getId(), s.getFolder().getName(),
-                        s.getSharedBy().getUsername(), s.getSharedWith().getUsername(), s.getPermission()))
+                        s.getSharedBy().getUsername(), s.getSharedWith().getUsername(), s.getPermission(), s.getCreatedAt()))
                 .collect(Collectors.toList());
     }
 
@@ -216,7 +216,7 @@ public class ShareService {
         return fileShareRepository.findBySharedWith(user).stream()
                 .filter(s -> s.getFile().getName().toLowerCase().contains(lower))
                 .map(s -> new FileShareResponse(s.getId(), s.getFile().getId(), s.getFile().getName(),
-                        s.getSharedBy().getUsername(), s.getSharedWith().getUsername(), s.getPermission()))
+                        s.getSharedBy().getUsername(), s.getSharedWith().getUsername(), s.getPermission(), s.getCreatedAt()))
                 .collect(Collectors.toList());
     }
 
@@ -226,7 +226,7 @@ public class ShareService {
         return folderShareRepository.findBySharedWith(user).stream()
                 .filter(s -> s.getFolder().getName().toLowerCase().contains(lower))
                 .map(s -> new FolderShareResponse(s.getId(), s.getFolder().getId(), s.getFolder().getName(),
-                        s.getSharedBy().getUsername(), s.getSharedWith().getUsername(), s.getPermission()))
+                        s.getSharedBy().getUsername(), s.getSharedWith().getUsername(), s.getPermission(), s.getCreatedAt()))
                 .collect(Collectors.toList());
     }
 

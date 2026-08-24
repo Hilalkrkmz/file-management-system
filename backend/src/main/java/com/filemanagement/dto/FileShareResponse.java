@@ -4,6 +4,7 @@ import com.filemanagement.enums.Permission;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -15,4 +16,5 @@ public class FileShareResponse {
     private String sharedByUsername;
     private String sharedWithUsername;
     private Permission permission;
+    private LocalDateTime createdAt;
 }
