@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getAllUsers, updateUserQuota, adminDeleteUser } from "../api/adminApi";
+import { getAllUsers, updateUserQuota, adminDeleteUser, updateUserRole } from "../api/adminApi";
 import Layout from "../components/Layout.jsx";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
@@ -11,6 +11,7 @@ import TableBody from "@mui/material/TableBody";
 import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
 import IconButton from "@mui/material/IconButton";
+import Chip from "@mui/material/Chip";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -19,6 +20,8 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+import RemoveModeratorIcon from "@mui/icons-material/RemoveModerator";
 import TableSortLabel from "@mui/material/TableSortLabel";
 
 function AdminUsers() {
@@ -27,6 +30,7 @@ function AdminUsers() {
     const [quotaTarget, setQuotaTarget] = useState(null);
     const [quotaValue, setQuotaValue] = useState("");
     const [deleteTarget, setDeleteTarget] = useState(null);
+    const [roleTarget, setRoleTarget] = useState(null);
     const [orderBy, setOrderBy] = useState("username");
     const [order, setOrder] = useState("asc");
 
@@ -53,6 +57,18 @@ function AdminUsers() {
             loadUsers();
         } catch (err) {
             setError(err.response?.data?.message || "Kota güncellenemedi");
+        }
+    };
+
+    const handleConfirmRoleChange = async () => {
+        if (!roleTarget) return;
+        const newRole = roleTarget.role === "ADMIN" ? "USER" : "ADMIN";
+        try {
+            await updateUserRole(roleTarget.id, newRole);
+            setRoleTarget(null);
+            loadUsers();
+        } catch (err) {
+            setError(err.response?.data?.message || "Rol güncellenemedi");
         }
     };
 
@@ -134,9 +150,26 @@ function AdminUsers() {
                             <TableRow key={u.id} hover>
                                 <TableCell>{u.username}</TableCell>
                                 <TableCell>{u.email}</TableCell>
-                                <TableCell>{u.role}</TableCell>
+                                <TableCell>
+                                    <Chip
+                                        label={u.role}
+                                        size="small"
+                                        color={u.role === "ADMIN" ? "primary" : "default"}
+                                    />
+                                </TableCell>
                                 <TableCell>{u.storageQuotaMb}</TableCell>
                                 <TableCell align="right">
+                                    <IconButton
+                                        size="small"
+                                        title={u.role === "ADMIN" ? "Admin yetkisini kaldır" : "Admin yap"}
+                                        onClick={() => setRoleTarget(u)}
+                                    >
+                                        {u.role === "ADMIN" ? (
+                                            <RemoveModeratorIcon fontSize="small" />
+                                        ) : (
+                                            <AdminPanelSettingsIcon fontSize="small" />
+                                        )}
+                                    </IconButton>
                                     <IconButton size="small" onClick={() => handleOpenQuota(u)}>
                                         <EditIcon fontSize="small" />
                                     </IconButton>
@@ -166,6 +199,18 @@ function AdminUsers() {
                 <DialogActions>
                     <Button onClick={() => setQuotaTarget(null)}>İptal</Button>
                     <Button variant="contained" onClick={handleConfirmQuota}>Kaydet</Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog open={!!roleTarget} onClose={() => setRoleTarget(null)}>
+                <DialogTitle>
+                    {roleTarget?.role === "ADMIN"
+                        ? `"${roleTarget?.username}" kullanıcısının admin yetkisi kaldırılsın mı?`
+                        : `"${roleTarget?.username}" admin yapılsın mı?`}
+                </DialogTitle>
+                <DialogActions>
+                    <Button onClick={() => setRoleTarget(null)}>İptal</Button>
+                    <Button variant="contained" onClick={handleConfirmRoleChange}>Onayla</Button>
                 </DialogActions>
             </Dialog>
 

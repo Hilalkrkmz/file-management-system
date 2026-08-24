@@ -5,6 +5,7 @@ import com.filemanagement.dto.UserResponse;
 import com.filemanagement.entity.File;
 import com.filemanagement.entity.Folder;
 import com.filemanagement.entity.User;
+import com.filemanagement.enums.Role;
 import com.filemanagement.repository.FileRepository;
 import com.filemanagement.repository.FolderRepository;
 import com.filemanagement.repository.UserRepository;
@@ -72,6 +73,21 @@ public class AdminService {
                 .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı"));
 
         user.setStorageQuotaMb(quotaMb);
+        userRepository.save(user);
+
+        return new UserResponse(user.getId(), user.getUsername(), user.getEmail(),
+                user.getRole(), user.getStorageQuotaMb(), user.getCreatedAt());
+    }
+
+    public UserResponse updateRole(UUID userId, Role role, String currentUsername) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı"));
+
+        if (user.getUsername().equals(currentUsername) && role != Role.ADMIN) {
+            throw new IllegalArgumentException("Kendi admin yetkinizi kaldıramazsınız");
+        }
+
+        user.setRole(role);
         userRepository.save(user);
 
         return new UserResponse(user.getId(), user.getUsername(), user.getEmail(),

@@ -2,10 +2,12 @@ package com.filemanagement.controller;
 
 import com.filemanagement.dto.AdminFileResponse;
 import com.filemanagement.dto.UpdateQuotaRequest;
+import com.filemanagement.dto.UpdateRoleRequest;
 import com.filemanagement.dto.UserResponse;
 import com.filemanagement.service.AdminService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -53,5 +55,12 @@ public class AdminController {
     public ResponseEntity<UserResponse> updateQuota(@PathVariable UUID id,
                                                     @Valid @RequestBody UpdateQuotaRequest request) {
         return ResponseEntity.ok(adminService.updateQuota(id, request.getQuotaMb()));
+    }
+
+    @PutMapping("/users/{id}/role")
+    public ResponseEntity<UserResponse> updateRole(@PathVariable UUID id,
+                                                   @Valid @RequestBody UpdateRoleRequest request,
+                                                   Authentication authentication) {
+        return ResponseEntity.ok(adminService.updateRole(id, request.getRole(), authentication.getName()));
     }
 }

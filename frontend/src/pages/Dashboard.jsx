@@ -61,6 +61,7 @@ function Dashboard() {
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [shareTarget, setShareTarget] = useState(null);
     const [shareEmail, setShareEmail] = useState("");
+    const [sharePermission, setSharePermission] = useState("VIEW");
     const [currentShares, setCurrentShares] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState(null);
@@ -155,7 +156,7 @@ function Dashboard() {
     const handleConfirmShare = async () => {
         if (!shareEmail.trim() || !shareTarget) return;
         try {
-            await shareWithUser(shareTarget, shareEmail, "VIEW");
+            await shareWithUser(shareTarget, shareEmail, sharePermission);
             setShareEmail("");
             const res = await getSharesForFile(shareTarget);
             setCurrentShares(res.data);
@@ -495,7 +496,19 @@ function Dashboard() {
                         label="Email"
                         value={shareEmail}
                         onChange={(e) => setShareEmail(e.target.value)}
+                        sx={{ mb: 1 }}
                     />
+                    <TextField
+                        select
+                        fullWidth
+                        size="small"
+                        label="İzin"
+                        value={sharePermission}
+                        onChange={(e) => setSharePermission(e.target.value)}
+                    >
+                        <MenuItem value="VIEW">Görüntüleme</MenuItem>
+                        <MenuItem value="DOWNLOAD">İndirme</MenuItem>
+                    </TextField>
                     <Button
                         fullWidth
                         variant="contained"
