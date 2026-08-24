@@ -43,6 +43,14 @@ function App() {
                     }
                 />
                 <Route
+                    path="/dashboard/shared/:sharedFolderId"
+                    element={
+                        <ProtectedRoute>
+                            <Dashboard />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
                     path="/shared-with-me"
                     element={
                         <ProtectedRoute>

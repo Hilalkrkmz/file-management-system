@@ -33,6 +33,13 @@ public class NotificationService {
         notificationRepository.save(notification);
     }
 
+    public void notifyFolderShared(User recipient, String sharerUsername, String folderName) {
+        Notification notification = new Notification();
+        notification.setRecipient(recipient);
+        notification.setMessage(sharerUsername + " sizinle \"" + folderName + "\" klasörünü paylaştı");
+        notificationRepository.save(notification);
+    }
+
     public List<NotificationResponse> listNotifications(String username) {
         User user = getUser(username);
         return notificationRepository.findByRecipientOrderByCreatedAtDesc(user).stream()

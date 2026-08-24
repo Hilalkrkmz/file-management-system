@@ -1,0 +1,25 @@
+package com.filemanagement.dto;
+
+import com.filemanagement.enums.Permission;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.UUID;
+
+@Getter
+@Setter
+public class ShareFolderRequest {
+
+    @NotNull
+    private UUID folderId;
+
+    @NotBlank
+    @Email
+    private String targetEmail;
+
+    @NotNull
+    private Permission permission;
+}

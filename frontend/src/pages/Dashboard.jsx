@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
+import { useParams, useLocation } from "react-router-dom";
 import { getFolders, createFolder, deleteFolder, renameFolder, moveFolder } from "../api/folderApi";
 import { getFiles, uploadFile, downloadFile, deleteFile, searchFiles, renameFile, moveFile } from "../api/fileApi";
-import { shareWithUser, createShareLink, getSharesForFile, removeShare } from "../api/shareApi";
+import { shareWithUser, createShareLink, getSharesForFile, removeShare, shareFolderWithUser, getSharesForFolder, removeFolderShare } from "../api/shareApi";
 import { getFileIcon } from "../utils/fileIcons.jsx";
 import Layout from "../components/Layout.jsx";
 import MoveDialog from "../components/MoveDialog.jsx";
@@ -51,8 +52,16 @@ import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
 import "../styles/Dashboard.css";
 
 function Dashboard() {
-    const [currentFolderId, setCurrentFolderId] = useState(null);
-    const [breadcrumb, setBreadcrumb] = useState([{ id: null, name: "Ana Dizin" }]);
+    const { sharedFolderId } = useParams();
+    const location = useLocation();
+    const isReadOnly = !!sharedFolderId;
+
+    const [currentFolderId, setCurrentFolderId] = useState(() => sharedFolderId ?? null);
+    const [breadcrumb, setBreadcrumb] = useState(() =>
+        sharedFolderId
+            ? [{ id: sharedFolderId, name: location.state?.folderName || "Paylaşılan Klasör" }]
+            : [{ id: null, name: "Ana Dizin" }]
+    );
     const [folders, setFolders] = useState([]);
     const [files, setFiles] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -98,7 +107,8 @@ function Dashboard() {
 
     useEffect(() => {
         if (shareTarget) {
-            getSharesForFile(shareTarget).then((res) => setCurrentShares(res.data)).catch(() => { });
+            const getShares = shareTarget.type === "folder" ? getSharesForFolder : getSharesForFile;
+            getShares(shareTarget.id).then((res) => setCurrentShares(res.data)).catch(() => { });
         } else {
             setCurrentShares([]);
         }
@@ -210,10 +220,16 @@ function Dashboard() {
     const handleConfirmShare = async () => {
         if (!shareEmail.trim() || !shareTarget) return;
         try {
-            await shareWithUser(shareTarget, shareEmail, sharePermission);
+            if (shareTarget.type === "folder") {
+                await shareFolderWithUser(shareTarget.id, shareEmail, sharePermission);
+                const res = await getSharesForFolder(shareTarget.id);
+                setCurrentShares(res.data);
+            } else {
+                await shareWithUser(shareTarget.id, shareEmail, sharePermission);
+                const res = await getSharesForFile(shareTarget.id);
+                setCurrentShares(res.data);
+            }
             setShareEmail("");
-            const res = await getSharesForFile(shareTarget);
-            setCurrentShares(res.data);
         } catch (err) {
             setError(err.response?.data?.message || "Paylaşılamadı");
         }
@@ -221,7 +237,11 @@ function Dashboard() {
 
     const handleRemoveShare = async (shareId) => {
         try {
-            await removeShare(shareId);
+            if (shareTarget?.type === "folder") {
+                await removeFolderShare(shareId);
+            } else {
+                await removeShare(shareId);
+            }
             setCurrentShares(currentShares.filter((s) => s.id !== shareId));
         } catch (err) {
             setError(err.response?.data?.message || "Paylaşım kaldırılamadı");
@@ -327,7 +347,9 @@ function Dashboard() {
         >
             <div className="dashboard-topbar">
                 <div>
-                    <Typography variant="h4" className="dashboard-title">Dosyalarım</Typography>
+                    <Typography variant="h4" className="dashboard-title">
+                        {isReadOnly ? "Paylaşılan Klasör" : "Dosyalarım"}
+                    </Typography>
                     {!searchResults && (
                         <Breadcrumbs className="breadcrumb-row">
                             {breadcrumb.map((crumb, index) => (
@@ -344,44 +366,46 @@ function Dashboard() {
                     )}
                 </div>
 
-                <div>
-                    <Button
-                        variant="contained"
-                        endIcon={<ArrowDropDownIcon />}
-                        onClick={(e) => setNewMenuAnchor(e.currentTarget)}
-                    >
-                        + New
-                    </Button>
-                    <Menu anchorEl={newMenuAnchor} open={!!newMenuAnchor} onClose={() => setNewMenuAnchor(null)}>
-                        <MenuItem onClick={() => { setNewFolderDialogOpen(true); setNewMenuAnchor(null); }}>
-                            <ListItemIcon><CreateNewFolderIcon fontSize="small" /></ListItemIcon>
-                            Yeni Klasör
-                        </MenuItem>
-                        <MenuItem onClick={() => { document.getElementById("fileInput").click(); setNewMenuAnchor(null); }}>
-                            <ListItemIcon><UploadFileIcon fontSize="small" /></ListItemIcon>
-                            Dosya Yükle
-                        </MenuItem>
-                        <MenuItem onClick={() => { document.getElementById("folderInput").click(); setNewMenuAnchor(null); }}>
-                            <ListItemIcon><DriveFolderUploadIcon fontSize="small" /></ListItemIcon>
-                            Klasör Yükle
-                        </MenuItem>
-                    </Menu>
-                    <input
-                        type="file"
-                        onChange={handleFileUpload}
-                        style={{ display: "none" }}
-                        id="fileInput"
-                    />
-                    <input
-                        type="file"
-                        webkitdirectory=""
-                        directory=""
-                        multiple
-                        onChange={handleFolderUpload}
-                        style={{ display: "none" }}
-                        id="folderInput"
-                    />
-                </div>
+                {!isReadOnly && (
+                    <div>
+                        <Button
+                            variant="contained"
+                            endIcon={<ArrowDropDownIcon />}
+                            onClick={(e) => setNewMenuAnchor(e.currentTarget)}
+                        >
+                            + New
+                        </Button>
+                        <Menu anchorEl={newMenuAnchor} open={!!newMenuAnchor} onClose={() => setNewMenuAnchor(null)}>
+                            <MenuItem onClick={() => { setNewFolderDialogOpen(true); setNewMenuAnchor(null); }}>
+                                <ListItemIcon><CreateNewFolderIcon fontSize="small" /></ListItemIcon>
+                                Yeni Klasör
+                            </MenuItem>
+                            <MenuItem onClick={() => { document.getElementById("fileInput").click(); setNewMenuAnchor(null); }}>
+                                <ListItemIcon><UploadFileIcon fontSize="small" /></ListItemIcon>
+                                Dosya Yükle
+                            </MenuItem>
+                            <MenuItem onClick={() => { document.getElementById("folderInput").click(); setNewMenuAnchor(null); }}>
+                                <ListItemIcon><DriveFolderUploadIcon fontSize="small" /></ListItemIcon>
+                                Klasör Yükle
+                            </MenuItem>
+                        </Menu>
+                        <input
+                            type="file"
+                            onChange={handleFileUpload}
+                            style={{ display: "none" }}
+                            id="fileInput"
+                        />
+                        <input
+                            type="file"
+                            webkitdirectory=""
+                            directory=""
+                            multiple
+                            onChange={handleFolderUpload}
+                            style={{ display: "none" }}
+                            id="folderInput"
+                        />
+                    </div>
+                )}
             </div>
 
             {error && <Alert severity="error" style={{ marginBottom: 16 }}>{error}</Alert>}
@@ -435,16 +459,18 @@ function Dashboard() {
                                             <FolderIcon color="primary" sx={{ fontSize: 40 }} />
                                             <Typography noWrap sx={{ maxWidth: "100%" }}>{folder.name}</Typography>
                                         </CardActionArea>
-                                        <IconButton
-                                            size="small"
-                                            sx={{ position: "absolute", top: 8, right: 8 }}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                openMenu(e, { type: "folder", id: folder.id, name: folder.name });
-                                            }}
-                                        >
-                                            <MoreVertIcon fontSize="small" />
-                                        </IconButton>
+                                        {!isReadOnly && (
+                                            <IconButton
+                                                size="small"
+                                                sx={{ position: "absolute", top: 8, right: 8 }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    openMenu(e, { type: "folder", id: folder.id, name: folder.name });
+                                                }}
+                                            >
+                                                <MoreVertIcon fontSize="small" />
+                                            </IconButton>
+                                        )}
                                     </Card>
                                 ))
                             ) : (
@@ -453,9 +479,11 @@ function Dashboard() {
                                         <ListItem
                                             key={folder.id}
                                             secondaryAction={
-                                                <IconButton onClick={(e) => openMenu(e, { type: "folder", id: folder.id, name: folder.name })}>
-                                                    <MoreVertIcon />
-                                                </IconButton>
+                                                !isReadOnly && (
+                                                    <IconButton onClick={(e) => openMenu(e, { type: "folder", id: folder.id, name: folder.name })}>
+                                                        <MoreVertIcon />
+                                                    </IconButton>
+                                                )
                                             }
                                         >
                                             <FolderIcon color="primary" style={{ marginRight: 8 }} />
@@ -551,7 +579,7 @@ function Dashboard() {
             </Dialog>
 
             <Dialog open={!!shareTarget} onClose={() => setShareTarget(null)} fullWidth maxWidth="xs">
-                <DialogTitle>Dosyayı Paylaş</DialogTitle>
+                <DialogTitle>{shareTarget?.type === "folder" ? "Klasörü Paylaş" : "Dosyayı Paylaş"}</DialogTitle>
                 <DialogContent>
                     <Typography variant="subtitle2" sx={{ mt: 1, mb: 1 }}>
                         Kullanıcı ile paylaş
@@ -586,19 +614,23 @@ function Dashboard() {
                         Paylaş
                     </Button>
 
-                    <Divider sx={{ my: 2 }} />
+                    {shareTarget?.type !== "folder" && (
+                        <>
+                            <Divider sx={{ my: 2 }} />
 
-                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                        Link ile paylaş
-                    </Typography>
-                    <Button
-                        fullWidth
-                        variant="outlined"
-                        startIcon={<LinkIcon />}
-                        onClick={() => handleCreateLink(shareTarget)}
-                    >
-                        İndirme linki oluştur (24 saat geçerli)
-                    </Button>
+                            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                                Link ile paylaş
+                            </Typography>
+                            <Button
+                                fullWidth
+                                variant="outlined"
+                                startIcon={<LinkIcon />}
+                                onClick={() => handleCreateLink(shareTarget.id)}
+                            >
+                                İndirme linki oluştur (24 saat geçerli)
+                            </Button>
+                        </>
+                    )}
 
                     {currentShares.length > 0 && (
                         <>
@@ -662,30 +694,38 @@ function Dashboard() {
                         İndir
                     </MenuItem>
                 )}
-                {menuTarget?.type === "file" && (
-                    <MenuItem onClick={() => { setShareTarget(menuTarget.id); closeMenu(); }}>
+                {!isReadOnly && (menuTarget?.type === "file" || menuTarget?.type === "folder") && (
+                    <MenuItem onClick={() => { setShareTarget({ type: menuTarget.type, id: menuTarget.id, name: menuTarget.name }); closeMenu(); }}>
                         <ListItemIcon><ShareIcon fontSize="small" /></ListItemIcon>
                         Paylaş
                     </MenuItem>
                 )}
-                <MenuItem onClick={handleOpenRename}>
-                    <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
-                    Yeniden Adlandır
-                </MenuItem>
-                <MenuItem onClick={handleOpenMove}>
-                    <ListItemIcon><DriveFileMoveIcon fontSize="small" /></ListItemIcon>
-                    Taşı
-                </MenuItem>
-                <MenuItem onClick={() => handleToggleStar(menuTarget.id)}>
-                    <ListItemIcon>
-                        {menuTarget?.starred ? <StarIcon fontSize="small" sx={{ color: "#FFB400" }} /> : <StarBorderIcon fontSize="small" />}
-                    </ListItemIcon>
-                    {menuTarget?.starred ? "Yıldızı Kaldır" : "Yıldızla"}
-                </MenuItem>
-                <MenuItem onClick={() => { setDeleteTarget(menuTarget); closeMenu(); }}>
-                    <ListItemIcon><DeleteIcon fontSize="small" /></ListItemIcon>
-                    Sil
-                </MenuItem>
+                {!isReadOnly && (
+                    <MenuItem onClick={handleOpenRename}>
+                        <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
+                        Yeniden Adlandır
+                    </MenuItem>
+                )}
+                {!isReadOnly && (
+                    <MenuItem onClick={handleOpenMove}>
+                        <ListItemIcon><DriveFileMoveIcon fontSize="small" /></ListItemIcon>
+                        Taşı
+                    </MenuItem>
+                )}
+                {!isReadOnly && menuTarget?.type === "file" && (
+                    <MenuItem onClick={() => handleToggleStar(menuTarget.id)}>
+                        <ListItemIcon>
+                            {menuTarget?.starred ? <StarIcon fontSize="small" sx={{ color: "#FFB400" }} /> : <StarBorderIcon fontSize="small" />}
+                        </ListItemIcon>
+                        {menuTarget?.starred ? "Yıldızı Kaldır" : "Yıldızla"}
+                    </MenuItem>
+                )}
+                {!isReadOnly && (
+                    <MenuItem onClick={() => { setDeleteTarget(menuTarget); closeMenu(); }}>
+                        <ListItemIcon><DeleteIcon fontSize="small" /></ListItemIcon>
+                        Sil
+                    </MenuItem>
+                )}
             </Menu>
 
             <Snackbar

@@ -71,4 +71,27 @@ public class ShareController {
         shareService.removeShare(authentication.getName(), shareId);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/folder")
+    public ResponseEntity<FolderShareResponse> shareFolderWithUser(@Valid @RequestBody ShareFolderRequest request,
+                                                                    Authentication authentication) {
+        return ResponseEntity.ok(shareService.shareFolderWithUser(authentication.getName(), request));
+    }
+
+    @GetMapping("/folders-with-me")
+    public ResponseEntity<List<FolderShareResponse>> foldersSharedWithMe(Authentication authentication) {
+        return ResponseEntity.ok(shareService.listFoldersSharedWithMe(authentication.getName()));
+    }
+
+    @GetMapping("/folder/{folderId}")
+    public ResponseEntity<List<FolderShareResponse>> sharesForFolder(@PathVariable UUID folderId,
+                                                                      Authentication authentication) {
+        return ResponseEntity.ok(shareService.listSharesForFolder(authentication.getName(), folderId));
+    }
+
+    @DeleteMapping("/folder/{shareId}")
+    public ResponseEntity<Void> removeFolderShare(@PathVariable UUID shareId, Authentication authentication) {
+        shareService.removeFolderShare(authentication.getName(), shareId);
+        return ResponseEntity.noContent().build();
+    }
 }

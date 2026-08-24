@@ -3,10 +3,14 @@ package com.filemanagement.service;
 import com.filemanagement.dto.*;
 import com.filemanagement.entity.File;
 import com.filemanagement.entity.FileShare;
+import com.filemanagement.entity.Folder;
+import com.filemanagement.entity.FolderShare;
 import com.filemanagement.entity.ShareLink;
 import com.filemanagement.entity.User;
 import com.filemanagement.repository.FileRepository;
 import com.filemanagement.repository.FileShareRepository;
+import com.filemanagement.repository.FolderRepository;
+import com.filemanagement.repository.FolderShareRepository;
 import com.filemanagement.repository.ShareLinkRepository;
 import com.filemanagement.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -20,17 +24,21 @@ import java.util.stream.Collectors;
 public class ShareService {
 
     private final FileRepository fileRepository;
+    private final FolderRepository folderRepository;
     private final UserRepository userRepository;
     private final FileShareRepository fileShareRepository;
+    private final FolderShareRepository folderShareRepository;
     private final ShareLinkRepository shareLinkRepository;
     private final NotificationService notificationService;
 
-    public ShareService(FileRepository fileRepository, UserRepository userRepository,
-                        FileShareRepository fileShareRepository, ShareLinkRepository shareLinkRepository,
-                        NotificationService notificationService) {
+    public ShareService(FileRepository fileRepository, FolderRepository folderRepository, UserRepository userRepository,
+                        FileShareRepository fileShareRepository, FolderShareRepository folderShareRepository,
+                        ShareLinkRepository shareLinkRepository, NotificationService notificationService) {
         this.fileRepository = fileRepository;
+        this.folderRepository = folderRepository;
         this.userRepository = userRepository;
         this.fileShareRepository = fileShareRepository;
+        this.folderShareRepository = folderShareRepository;
         this.shareLinkRepository = shareLinkRepository;
         this.notificationService = notificationService;
     }
@@ -145,5 +153,72 @@ public class ShareService {
         }
 
         fileShareRepository.delete(share);
+    }
+
+    private Folder getOwnedFolder(User owner, UUID folderId) {
+        Folder folder = folderRepository.findById(folderId)
+                .orElseThrow(() -> new IllegalArgumentException("Klasör bulunamadı"));
+        if (!folder.getOwner().getId().equals(owner.getId())) {
+            throw new IllegalArgumentException("Sadece kendi klasörlerinizi paylaşabilirsiniz");
+        }
+        return folder;
+    }
+
+    public FolderShareResponse shareFolderWithUser(String username, ShareFolderRequest request) {
+        User sharer = getUser(username);
+        Folder folder = getOwnedFolder(sharer, request.getFolderId());
+
+        User target = userRepository.findByEmail(request.getTargetEmail())
+                .orElseThrow(() -> new IllegalArgumentException("Bu email ile kayıtlı kullanıcı bulunamadı"));
+
+        if (target.getId().equals(sharer.getId())) {
+            throw new IllegalArgumentException("Kendinizle paylaşım yapamazsınız");
+        }
+
+        if (folderShareRepository.existsByFolderAndSharedWith(folder, target)) {
+            throw new IllegalArgumentException("Bu klasör zaten bu kullanıcıyla paylaşılmış");
+        }
+
+        FolderShare share = new FolderShare();
+        share.setFolder(folder);
+        share.setSharedBy(sharer);
+        share.setSharedWith(target);
+        share.setPermission(request.getPermission());
+
+        folderShareRepository.save(share);
+        notificationService.notifyFolderShared(target, sharer.getUsername(), folder.getName());
+
+        return new FolderShareResponse(share.getId(), folder.getId(), folder.getName(),
+                sharer.getUsername(), target.getUsername(), share.getPermission());
+    }
+
+    public List<FolderShareResponse> listFoldersSharedWithMe(String username) {
+        User user = getUser(username);
+        return folderShareRepository.findBySharedWith(user).stream()
+                .map(s -> new FolderShareResponse(s.getId(), s.getFolder().getId(), s.getFolder().getName(),
+                        s.getSharedBy().getUsername(), s.getSharedWith().getUsername(), s.getPermission()))
+                .collect(Collectors.toList());
+    }
+
+    public List<FolderShareResponse> listSharesForFolder(String username, UUID folderId) {
+        User owner = getUser(username);
+        Folder folder = getOwnedFolder(owner, folderId);
+
+        return folderShareRepository.findByFolder(folder).stream()
+                .map(s -> new FolderShareResponse(s.getId(), s.getFolder().getId(), s.getFolder().getName(),
+                        s.getSharedBy().getUsername(), s.getSharedWith().getUsername(), s.getPermission()))
+                .collect(Collectors.toList());
+    }
+
+    public void removeFolderShare(String username, UUID shareId) {
+        User owner = getUser(username);
+        FolderShare share = folderShareRepository.findById(shareId)
+                .orElseThrow(() -> new IllegalArgumentException("Paylaşım bulunamadı"));
+
+        if (!share.getFolder().getOwner().getId().equals(owner.getId())) {
+            throw new IllegalArgumentException("Bu paylaşımı kaldırma yetkiniz yok");
+        }
+
+        folderShareRepository.delete(share);
     }
 }

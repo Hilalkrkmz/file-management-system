@@ -30,6 +30,7 @@ public class FileService {
     private final FileStorageService storageService;
     private final FileShareRepository fileShareRepository;
     private final ShareLinkRepository shareLinkRepository;
+    private final FolderAccessService folderAccessService;
 
     @Value("${app.storage.max-file-size-mb}")
     private long maxFileSizeMb;
@@ -52,13 +53,14 @@ public class FileService {
 
     public FileService(FileRepository fileRepository, FolderRepository folderRepository,
                        UserRepository userRepository, FileStorageService storageService,FileShareRepository fileShareRepository,
-                       ShareLinkRepository shareLinkRepository) {
+                       ShareLinkRepository shareLinkRepository, FolderAccessService folderAccessService) {
         this.fileRepository = fileRepository;
         this.folderRepository = folderRepository;
         this.userRepository = userRepository;
         this.storageService = storageService;
         this.fileShareRepository = fileShareRepository;
         this.shareLinkRepository = shareLinkRepository;
+        this.folderAccessService = folderAccessService;
     }
 
     private User getUser(String username) {
@@ -178,7 +180,7 @@ public class FileService {
         Folder folder = folderRepository.findById(folderId)
                 .orElseThrow(() -> new IllegalArgumentException("Klasör bulunamadı"));
 
-        if (!folder.getOwner().getId().equals(owner.getId())) {
+        if (!folderAccessService.hasAccess(folder, owner)) {
             throw new IllegalArgumentException("Bu klasöre erişim yetkiniz yok");
         }
 
@@ -205,8 +207,9 @@ public class FileService {
 
         boolean isOwner = file.getOwner().getId().equals(user.getId());
         boolean isSharedWithUser = fileShareRepository.existsByFileAndSharedWith(file, user);
+        boolean isViaSharedFolder = file.getFolder() != null && folderAccessService.hasAccess(file.getFolder(), user);
 
-        if (!isOwner && !isSharedWithUser) {
+        if (!isOwner && !isSharedWithUser && !isViaSharedFolder) {
             throw new IllegalArgumentException("Bu dosyaya erişim yetkiniz yok");
         }
         return file;

@@ -6,6 +6,7 @@ import com.filemanagement.entity.Folder;
 import com.filemanagement.entity.User;
 import com.filemanagement.repository.FileRepository;
 import com.filemanagement.repository.FolderRepository;
+import com.filemanagement.repository.FolderShareRepository;
 import com.filemanagement.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
@@ -21,13 +22,18 @@ public class FolderService {
     private final UserRepository userRepository;
     private final FileRepository fileRepository;
     private final FileService fileService;
+    private final FolderAccessService folderAccessService;
+    private final FolderShareRepository folderShareRepository;
 
     public FolderService(FolderRepository folderRepository, UserRepository userRepository,
-                         FileRepository fileRepository, FileService fileService) {
+                         FileRepository fileRepository, FileService fileService,
+                         FolderAccessService folderAccessService, FolderShareRepository folderShareRepository) {
         this.folderRepository = folderRepository;
         this.userRepository = userRepository;
         this.fileRepository = fileRepository;
         this.fileService = fileService;
+        this.folderAccessService = folderAccessService;
+        this.folderShareRepository = folderShareRepository;
     }
 
     private User getUser(String username) {
@@ -74,11 +80,11 @@ public class FolderService {
             Folder parent = folderRepository.findById(parentFolderId)
                     .orElseThrow(() -> new IllegalArgumentException("Klasör bulunamadı"));
 
-            if (!parent.getOwner().getId().equals(owner.getId())) {
+            if (!folderAccessService.hasAccess(parent, owner)) {
                 throw new IllegalArgumentException("Bu klasöre erişim yetkiniz yok");
             }
 
-            folders = folderRepository.findByOwnerAndParentFolderAndIsDeletedFalse(owner, parent);
+            folders = folderRepository.findByParentFolderAndIsDeletedFalse(parent);
         }
 
         return folders.stream().map(this::toResponse).collect(Collectors.toList());
@@ -196,6 +202,8 @@ public class FolderService {
         fileRepository.findByFolder(folder).forEach(fileService::purgeFile);
 
         folderRepository.findByParentFolder(folder).forEach(this::permanentlyDeleteRecursive);
+
+        folderShareRepository.deleteAll(folderShareRepository.findByFolder(folder));
 
         folderRepository.delete(folder);
     }
