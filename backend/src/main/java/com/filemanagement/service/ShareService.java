@@ -9,6 +9,7 @@ import com.filemanagement.entity.ShareLink;
 import com.filemanagement.entity.User;
 import com.filemanagement.repository.FileRepository;
 import com.filemanagement.repository.FileShareRepository;
+import com.filemanagement.repository.FileStarRepository;
 import com.filemanagement.repository.FolderRepository;
 import com.filemanagement.repository.FolderShareRepository;
 import com.filemanagement.repository.ShareLinkRepository;
@@ -30,10 +31,12 @@ public class ShareService {
     private final FolderShareRepository folderShareRepository;
     private final ShareLinkRepository shareLinkRepository;
     private final NotificationService notificationService;
+    private final FileStarRepository fileStarRepository;
 
     public ShareService(FileRepository fileRepository, FolderRepository folderRepository, UserRepository userRepository,
                         FileShareRepository fileShareRepository, FolderShareRepository folderShareRepository,
-                        ShareLinkRepository shareLinkRepository, NotificationService notificationService) {
+                        ShareLinkRepository shareLinkRepository, NotificationService notificationService,
+                        FileStarRepository fileStarRepository) {
         this.fileRepository = fileRepository;
         this.folderRepository = folderRepository;
         this.userRepository = userRepository;
@@ -41,6 +44,7 @@ public class ShareService {
         this.folderShareRepository = folderShareRepository;
         this.shareLinkRepository = shareLinkRepository;
         this.notificationService = notificationService;
+        this.fileStarRepository = fileStarRepository;
     }
 
     private User getUser(String username) {
@@ -82,14 +86,15 @@ public class ShareService {
         notificationService.notifyFileShared(target, sharer.getUsername(), file.getName());
 
         return new FileShareResponse(share.getId(), file.getId(), file.getName(),
-                sharer.getUsername(), target.getUsername(), share.getPermission(), share.getCreatedAt());
+                sharer.getUsername(), target.getUsername(), share.getPermission(), share.getCreatedAt(), false);
     }
 
     public List<FileShareResponse> listSharedWithMe(String username) {
         User user = getUser(username);
         return fileShareRepository.findBySharedWith(user).stream()
                 .map(s -> new FileShareResponse(s.getId(), s.getFile().getId(), s.getFile().getName(),
-                        s.getSharedBy().getUsername(), s.getSharedWith().getUsername(), s.getPermission(), s.getCreatedAt()))
+                        s.getSharedBy().getUsername(), s.getSharedWith().getUsername(), s.getPermission(), s.getCreatedAt(),
+                        fileStarRepository.findByUserAndFile(user, s.getFile()).isPresent()))
                 .collect(Collectors.toList());
     }
 
@@ -139,7 +144,7 @@ public class ShareService {
 
         return fileShareRepository.findByFile(file).stream()
                 .map(s -> new FileShareResponse(s.getId(), s.getFile().getId(), s.getFile().getName(),
-                        s.getSharedBy().getUsername(), s.getSharedWith().getUsername(), s.getPermission(), s.getCreatedAt()))
+                        s.getSharedBy().getUsername(), s.getSharedWith().getUsername(), s.getPermission(), s.getCreatedAt(), false))
                 .collect(Collectors.toList());
     }
 
@@ -216,7 +221,8 @@ public class ShareService {
         return fileShareRepository.findBySharedWith(user).stream()
                 .filter(s -> s.getFile().getName().toLowerCase().contains(lower))
                 .map(s -> new FileShareResponse(s.getId(), s.getFile().getId(), s.getFile().getName(),
-                        s.getSharedBy().getUsername(), s.getSharedWith().getUsername(), s.getPermission(), s.getCreatedAt()))
+                        s.getSharedBy().getUsername(), s.getSharedWith().getUsername(), s.getPermission(), s.getCreatedAt(),
+                        fileStarRepository.findByUserAndFile(user, s.getFile()).isPresent()))
                 .collect(Collectors.toList());
     }
 

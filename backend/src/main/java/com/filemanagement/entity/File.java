@@ -51,7 +51,4 @@ public class File {
     protected void onCreate() {
         this.uploadedAt = LocalDateTime.now();
     }
-
-    @Column(nullable = false, columnDefinition = "boolean not null default false")
-    private boolean isStarred = false;
 }

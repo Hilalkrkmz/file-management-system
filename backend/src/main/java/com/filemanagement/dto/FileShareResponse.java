@@ -17,4 +17,5 @@ public class FileShareResponse {
     private String sharedWithUsername;
     private Permission permission;
     private LocalDateTime createdAt;
+    private boolean starred;
 }

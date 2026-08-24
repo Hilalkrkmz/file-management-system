@@ -35,6 +35,4 @@ public interface FileRepository extends JpaRepository<File, UUID> {
     long sumSizeByOwner(@Param("owner") User owner);
 
     long countByOwnerAndIsDeletedFalse(User owner);
-
-    List<File> findByOwnerAndIsStarredTrueAndIsDeletedFalse(User owner);
 }

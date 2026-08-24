@@ -5,6 +5,7 @@ import com.filemanagement.dto.UserProfileResponse;
 import com.filemanagement.entity.User;
 import com.filemanagement.repository.FileAccessRepository;
 import com.filemanagement.repository.FileShareRepository;
+import com.filemanagement.repository.FileStarRepository;
 import com.filemanagement.repository.FolderShareRepository;
 import com.filemanagement.repository.NotificationRepository;
 import com.filemanagement.repository.UserRepository;
@@ -26,13 +27,14 @@ public class UserService {
     private final FolderShareRepository folderShareRepository;
     private final NotificationRepository notificationRepository;
     private final FileAccessRepository fileAccessRepository;
+    private final FileStarRepository fileStarRepository;
     private final JwtUtil jwtUtil;
 
     public UserService(UserRepository userRepository, FileStorageService storageService,
                        PasswordEncoder passwordEncoder, FolderService folderService,
                        FileShareRepository fileShareRepository, FolderShareRepository folderShareRepository,
                        NotificationRepository notificationRepository, FileAccessRepository fileAccessRepository,
-                       JwtUtil jwtUtil) {
+                       FileStarRepository fileStarRepository, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.storageService = storageService;
         this.passwordEncoder = passwordEncoder;
@@ -41,6 +43,7 @@ public class UserService {
         this.folderShareRepository = folderShareRepository;
         this.notificationRepository = notificationRepository;
         this.fileAccessRepository = fileAccessRepository;
+        this.fileStarRepository = fileStarRepository;
         this.jwtUtil = jwtUtil;
     }
 
@@ -138,6 +141,7 @@ public class UserService {
         folderShareRepository.deleteAll(folderShareRepository.findBySharedWith(user));
         notificationRepository.deleteAll(notificationRepository.findByRecipientOrderByCreatedAtDesc(user));
         fileAccessRepository.deleteAll(fileAccessRepository.findByUserOrderByAccessedAtDesc(user));
+        fileStarRepository.deleteAll(fileStarRepository.findByUser(user));
 
         folderService.purgeAllForOwner(user);
 

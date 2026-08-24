@@ -5,9 +5,11 @@ import com.filemanagement.dto.StorageInfoResponse;
 import com.filemanagement.entity.Folder;
 import com.filemanagement.entity.User;
 import com.filemanagement.entity.FileAccess;
+import com.filemanagement.entity.FileStar;
 import com.filemanagement.repository.FileAccessRepository;
 import com.filemanagement.repository.FileRepository;
 import com.filemanagement.repository.FileShareRepository;
+import com.filemanagement.repository.FileStarRepository;
 import com.filemanagement.repository.FolderRepository;
 import com.filemanagement.repository.ShareLinkRepository;
 import com.filemanagement.repository.UserRepository;
@@ -34,6 +36,7 @@ public class FileService {
     private final ShareLinkRepository shareLinkRepository;
     private final FolderAccessService folderAccessService;
     private final FileAccessRepository fileAccessRepository;
+    private final FileStarRepository fileStarRepository;
 
     @Value("${app.storage.max-file-size-mb}")
     private long maxFileSizeMb;
@@ -57,7 +60,7 @@ public class FileService {
     public FileService(FileRepository fileRepository, FolderRepository folderRepository,
                        UserRepository userRepository, FileStorageService storageService,FileShareRepository fileShareRepository,
                        ShareLinkRepository shareLinkRepository, FolderAccessService folderAccessService,
-                       FileAccessRepository fileAccessRepository) {
+                       FileAccessRepository fileAccessRepository, FileStarRepository fileStarRepository) {
         this.fileRepository = fileRepository;
         this.folderRepository = folderRepository;
         this.userRepository = userRepository;
@@ -66,6 +69,7 @@ public class FileService {
         this.shareLinkRepository = shareLinkRepository;
         this.folderAccessService = folderAccessService;
         this.fileAccessRepository = fileAccessRepository;
+        this.fileStarRepository = fileStarRepository;
     }
 
     private User getUser(String username) {
@@ -146,7 +150,7 @@ public class FileService {
         file.setOwner(owner);
 
         fileRepository.save(file);
-        return toResponse(file);
+        return toResponse(file, owner);
     }
 
     private String resolveUniqueName(User owner, Folder folder, String originalName) {
@@ -179,7 +183,7 @@ public class FileService {
 
         if (folderId == null) {
             return fileRepository.findByOwnerAndFolderIsNullAndIsDeletedFalse(owner)
-                    .stream().map(this::toResponse).collect(Collectors.toList());
+                    .stream().map(f -> toResponse(f, owner)).collect(Collectors.toList());
         }
 
         Folder folder = folderRepository.findById(folderId)
@@ -190,7 +194,7 @@ public class FileService {
         }
 
         return fileRepository.findByFolderAndIsDeletedFalse(folder)
-                .stream().map(this::toResponse).collect(Collectors.toList());
+                .stream().map(f -> toResponse(f, owner)).collect(Collectors.toList());
     }
 
     public byte[] downloadFile(String username, UUID fileId) {
@@ -261,21 +265,22 @@ public class FileService {
 
         file.setFolder(targetFolder);
         fileRepository.save(file);
-        return toResponse(file);
+        return toResponse(file, owner);
     }
 
     public List<FileResponse> search(String username, String query) {
         User owner = getUser(username);
         return fileRepository.findByOwnerAndNameContainingIgnoreCaseAndIsDeletedFalse(owner, query)
-                .stream().map(this::toResponse).collect(Collectors.toList());
+                .stream().map(f -> toResponse(f, owner)).collect(Collectors.toList());
     }
 
-    private FileResponse toResponse(com.filemanagement.entity.File file) {
-        return toResponse(file, null);
+    private FileResponse toResponse(com.filemanagement.entity.File file, User currentUser) {
+        return toResponse(file, null, currentUser);
     }
 
-    private FileResponse toResponse(com.filemanagement.entity.File file, LocalDateTime accessedAt) {
+    private FileResponse toResponse(com.filemanagement.entity.File file, LocalDateTime accessedAt, User currentUser) {
         Folder folder = file.getFolder();
+        boolean starred = fileStarRepository.findByUserAndFile(currentUser, file).isPresent();
         return new FileResponse(
                 file.getId(),
                 file.getName(),
@@ -285,7 +290,7 @@ public class FileService {
                 folder != null ? folder.getName() : "Ana Dizin",
                 file.getUploadedAt(),
                 accessedAt,
-                file.isStarred()
+                starred
         );
     }
 
@@ -308,7 +313,7 @@ public class FileService {
     public List<FileResponse> listTrash(String username) {
         User owner = getUser(username);
         return fileRepository.findByOwnerAndIsDeletedTrue(owner)
-                .stream().map(this::toResponse).collect(Collectors.toList());
+                .stream().map(f -> toResponse(f, owner)).collect(Collectors.toList());
     }
 
     public void restoreFile(String username, UUID fileId) {
@@ -336,7 +341,7 @@ public class FileService {
 
         file.setName(newName);
         fileRepository.save(file);
-        return toResponse(file);
+        return toResponse(file, owner);
     }
 
     public void permanentlyDeleteFile(String username, UUID fileId) {
@@ -355,6 +360,7 @@ public class FileService {
         fileShareRepository.deleteAll(fileShareRepository.findByFile(file));
         shareLinkRepository.deleteAll(shareLinkRepository.findByFile(file));
         fileAccessRepository.deleteAll(fileAccessRepository.findByFile(file));
+        fileStarRepository.deleteAll(fileStarRepository.findByFile(file));
         storageService.delete(file.getStoragePath());
         fileRepository.delete(file);
     }
@@ -364,28 +370,33 @@ public class FileService {
         return fileAccessRepository.findByUserOrderByAccessedAtDesc(user).stream()
                 .filter(a -> !a.getFile().isDeleted())
                 .limit(10)
-                .map(a -> toResponse(a.getFile(), a.getAccessedAt()))
+                .map(a -> toResponse(a.getFile(), a.getAccessedAt(), user))
                 .collect(Collectors.toList());
     }
 
     public FileResponse toggleStar(String username, UUID fileId) {
-        User owner = getUser(username);
-        com.filemanagement.entity.File file = fileRepository.findById(fileId)
-                .orElseThrow(() -> new IllegalArgumentException("Dosya bulunamadı"));
+        User user = getUser(username);
+        com.filemanagement.entity.File file = getOwnedOrSharedFile(user, fileId);
 
-        if (!file.getOwner().getId().equals(owner.getId())) {
-            throw new IllegalArgumentException("Bu dosya üzerinde yetkiniz yok");
-        }
-
-        file.setStarred(!file.isStarred());
-        fileRepository.save(file);
-        return toResponse(file);
+        fileStarRepository.findByUserAndFile(user, file).ifPresentOrElse(
+                fileStarRepository::delete,
+                () -> {
+                    FileStar star = new FileStar();
+                    star.setUser(user);
+                    star.setFile(file);
+                    fileStarRepository.save(star);
+                }
+        );
+        return toResponse(file, user);
     }
 
     public List<FileResponse> listStarred(String username) {
-        User owner = getUser(username);
-        return fileRepository.findByOwnerAndIsStarredTrueAndIsDeletedFalse(owner)
-                .stream().map(this::toResponse).collect(Collectors.toList());
+        User user = getUser(username);
+        return fileStarRepository.findByUser(user).stream()
+                .map(FileStar::getFile)
+                .filter(f -> !f.isDeleted())
+                .map(f -> toResponse(f, user))
+                .collect(Collectors.toList());
     }
 
 }

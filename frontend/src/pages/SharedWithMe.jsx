@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { getSharedWithMe, getFoldersSharedWithMe } from "../api/shareApi";
-import { downloadFile } from "../api/fileApi";
+import { downloadFile, toggleStar } from "../api/fileApi";
 import { getFileIcon } from "../utils/fileIcons.jsx";
 import Layout from "../components/Layout.jsx";
+import FilterPill from "../components/FilterPill.jsx";
 import Typography from "@mui/material/Typography";
 import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
@@ -13,37 +14,13 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import IconButton from "@mui/material/IconButton";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Select from "@mui/material/Select";
+import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import DownloadIcon from "@mui/icons-material/Download";
 import FolderIcon from "@mui/icons-material/Folder";
-
-const pillSx = {
-    borderRadius: 5,
-    fontSize: 14,
-    "& .MuiSelect-select": { display: "flex", alignItems: "center", py: 0.75, px: 1.5 },
-};
-
-function FilterPill({ label, value, onChange, options }) {
-    return (
-        <Select
-            size="small"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            displayEmpty
-            sx={pillSx}
-            renderValue={(v) => {
-                const selected = options.find((o) => o.value === v);
-                const suffix = v !== "all" && selected ? `: ${selected.label}` : "";
-                return `${label}${suffix}`;
-            }}
-        >
-            {options.map((o) => (
-                <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
-            ))}
-        </Select>
-    );
-}
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import StarIcon from "@mui/icons-material/Star";
+import StarBorderIcon from "@mui/icons-material/StarBorder";
 
 function SharedWithMe() {
     const navigate = useNavigate();
@@ -54,6 +31,9 @@ function SharedWithMe() {
     const [typeFilter, setTypeFilter] = useState("all");
     const [userFilter, setUserFilter] = useState("all");
     const [dateFilter, setDateFilter] = useState("all");
+
+    const [menuAnchor, setMenuAnchor] = useState(null);
+    const [menuTarget, setMenuTarget] = useState(null);
 
     useEffect(() => {
         getSharedWithMe()
@@ -68,6 +48,24 @@ function SharedWithMe() {
         navigate(`/dashboard/shared/${folderShare.folderId}`, {
             state: { folderName: folderShare.folderName },
         });
+    };
+
+    const openMenu = (e, share) => {
+        setMenuAnchor(e.currentTarget);
+        setMenuTarget(share);
+    };
+
+    const closeMenu = () => setMenuAnchor(null);
+
+    const handleToggleStar = async () => {
+        if (!menuTarget) return;
+        try {
+            await toggleStar(menuTarget.fileId);
+            setShares((prev) => prev.map((s) => (s.id === menuTarget.id ? { ...s, starred: !s.starred } : s)));
+        } catch (err) {
+            setError(err.response?.data?.message || "İşlem başarısız");
+        }
+        closeMenu();
     };
 
     const userOptions = useMemo(() => {
@@ -147,8 +145,8 @@ function SharedWithMe() {
                     <ListItem
                         key={s.id}
                         secondaryAction={
-                            <IconButton onClick={() => downloadFile(s.fileId, s.fileName)}>
-                                <DownloadIcon />
+                            <IconButton onClick={(e) => openMenu(e, s)}>
+                                <MoreVertIcon />
                             </IconButton>
                         }
                     >
@@ -167,6 +165,19 @@ function SharedWithMe() {
                         : "Filtreyle eşleşen bir sonuç yok."}
                 </Typography>
             )}
+
+            <Menu anchorEl={menuAnchor} open={!!menuAnchor} onClose={closeMenu}>
+                <MenuItem onClick={() => { downloadFile(menuTarget.fileId, menuTarget.fileName); closeMenu(); }}>
+                    <ListItemIcon><DownloadIcon fontSize="small" /></ListItemIcon>
+                    İndir
+                </MenuItem>
+                <MenuItem onClick={handleToggleStar}>
+                    <ListItemIcon>
+                        {menuTarget?.starred ? <StarIcon fontSize="small" sx={{ color: "#FFB400" }} /> : <StarBorderIcon fontSize="small" />}
+                    </ListItemIcon>
+                    {menuTarget?.starred ? "Yıldızı Kaldır" : "Yıldızla"}
+                </MenuItem>
+            </Menu>
         </Layout>
     );
 }

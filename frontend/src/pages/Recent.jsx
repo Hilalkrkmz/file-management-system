@@ -1,7 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { getRecentFiles, downloadFile, deleteFile } from "../api/fileApi";
 import { getFileIcon } from "../utils/fileIcons.jsx";
+import { getFileCategory, CATEGORY_LABELS } from "../utils/fileCategory.js";
 import Layout from "../components/Layout.jsx";
+import FilterPill from "../components/FilterPill.jsx";
 import Typography from "@mui/material/Typography";
 import Paper from "@mui/material/Paper";
 import IconButton from "@mui/material/IconButton";
@@ -42,6 +44,10 @@ function Recent() {
     const [menuAnchor, setMenuAnchor] = useState(null);
     const [menuTarget, setMenuTarget] = useState(null);
 
+    const [typeFilter, setTypeFilter] = useState("all");
+    const [folderFilter, setFolderFilter] = useState("all");
+    const [dateFilter, setDateFilter] = useState("all");
+
     const load = () => {
         getRecentFiles()
             .then((res) => setFiles(res.data))
@@ -70,7 +76,47 @@ function Recent() {
         }
     };
 
-    const groups = files.reduce((acc, file) => {
+    const typeOptions = useMemo(() => {
+        const categories = new Set(files.map((f) => getFileCategory(f.extension)));
+        return [
+            { value: "all", label: "Tümü" },
+            ...Array.from(categories).map((c) => ({ value: c, label: CATEGORY_LABELS[c] })),
+        ];
+    }, [files]);
+
+    const folderOptions = useMemo(() => {
+        const folders = new Set(files.map((f) => f.folderName));
+        return [
+            { value: "all", label: "Tümü" },
+            ...Array.from(folders).sort().map((f) => ({ value: f, label: f })),
+        ];
+    }, [files]);
+
+    const dateOptions = [
+        { value: "all", label: "Tümü" },
+        { value: "today", label: "Bugün" },
+        { value: "week", label: "Son 7 gün" },
+        { value: "month", label: "Son 30 gün" },
+    ];
+
+    const isWithinDateFilter = (accessedAt) => {
+        if (dateFilter === "all") return true;
+        if (!accessedAt) return false;
+        const diffMs = Date.now() - new Date(accessedAt).getTime();
+        const dayMs = 24 * 60 * 60 * 1000;
+        if (dateFilter === "today") return diffMs < dayMs;
+        if (dateFilter === "week") return diffMs < 7 * dayMs;
+        if (dateFilter === "month") return diffMs < 30 * dayMs;
+        return true;
+    };
+
+    const filteredFiles = files.filter((f) =>
+        (typeFilter === "all" || getFileCategory(f.extension) === typeFilter) &&
+        (folderFilter === "all" || f.folderName === folderFilter) &&
+        isWithinDateFilter(f.lastAccessedAt)
+    );
+
+    const groups = filteredFiles.reduce((acc, file) => {
         const label = groupLabel(file.lastAccessedAt);
         if (!acc[label]) acc[label] = [];
         acc[label].push(file);
@@ -81,6 +127,14 @@ function Recent() {
         <Layout>
             <Typography variant="h4" gutterBottom>Son Erişilenler</Typography>
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
+            {files.length > 0 && (
+                <Box sx={{ display: "flex", gap: 1.5, mb: 3 }}>
+                    <FilterPill label="Tür" value={typeFilter} onChange={setTypeFilter} options={typeOptions} />
+                    <FilterPill label="Klasör" value={folderFilter} onChange={setFolderFilter} options={folderOptions} />
+                    <FilterPill label="Değiştirilme" value={dateFilter} onChange={setDateFilter} options={dateOptions} />
+                </Box>
+            )}
 
             {Object.entries(groups).map(([label, groupFiles]) => (
                 <Box key={label} sx={{ mb: 3 }}>
@@ -123,6 +177,9 @@ function Recent() {
 
             {files.length === 0 && (
                 <Typography color="text.secondary">Henüz erişim geçmişi yok.</Typography>
+            )}
+            {files.length > 0 && filteredFiles.length === 0 && (
+                <Typography color="text.secondary">Filtreyle eşleşen bir sonuç yok.</Typography>
             )}
 
             <Menu anchorEl={menuAnchor} open={!!menuAnchor} onClose={closeMenu}>
