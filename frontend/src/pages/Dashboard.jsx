@@ -52,6 +52,7 @@ import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import ChecklistIcon from "@mui/icons-material/Checklist";
 
 import "../styles/Dashboard.css";
 
@@ -92,6 +93,7 @@ function Dashboard() {
     const [isDragging, setIsDragging] = useState(false);
     const [dragCounter, setDragCounter] = useState(0);
 
+    const [selectionMode, setSelectionMode] = useState(false);
     const [selectedIds, setSelectedIds] = useState(new Set());
     const [bulkMoveDialogOpen, setBulkMoveDialogOpen] = useState(false);
     const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
@@ -115,6 +117,7 @@ function Dashboard() {
     useEffect(() => {
         loadContents(currentFolderId);
         setSelectedIds(new Set());
+        setSelectionMode(false);
     }, [currentFolderId]);
 
     useEffect(() => {
@@ -441,7 +444,17 @@ function Dashboard() {
         });
     };
 
-    const clearSelection = () => setSelectedIds(new Set());
+    const clearSelection = () => {
+        setSelectedIds(new Set());
+        setSelectionMode(false);
+    };
+
+    const handleStartSelection = () => {
+        if (!menuTarget) return;
+        setSelectionMode(true);
+        toggleSelect(menuTarget.type, menuTarget.id);
+        closeMenu();
+    };
 
     const handleBulkDelete = async () => {
         for (const key of selectedIds) {
@@ -715,7 +728,7 @@ function Dashboard() {
                                             <FolderIcon color="primary" sx={{ fontSize: 40 }} />
                                             <Typography noWrap sx={{ maxWidth: "100%" }}>{folder.name}</Typography>
                                         </CardActionArea>
-                                        {!isReadOnly && (
+                                        {!isReadOnly && selectionMode && (
                                             <Checkbox
                                                 size="small"
                                                 checked={selectedIds.has(selectionKey("folder", folder.id))}
@@ -751,7 +764,7 @@ function Dashboard() {
                                                 )
                                             }
                                         >
-                                            {!isReadOnly && (
+                                            {!isReadOnly && selectionMode && (
                                                 <Checkbox
                                                     size="small"
                                                     checked={selectedIds.has(selectionKey("folder", folder.id))}
@@ -788,7 +801,7 @@ function Dashboard() {
                         <div className="file-grid">
                             {files.map((file) => (
                                 <div className="file-row" key={file.id}>
-                                    {!isReadOnly && (
+                                    {!isReadOnly && selectionMode && (
                                         <Checkbox
                                             size="small"
                                             checked={selectedIds.has(selectionKey("file", file.id))}
@@ -822,7 +835,7 @@ function Dashboard() {
                                         </IconButton>
                                     }
                                 >
-                                    {!isReadOnly && (
+                                    {!isReadOnly && selectionMode && (
                                         <Checkbox
                                             size="small"
                                             checked={selectedIds.has(selectionKey("file", file.id))}
@@ -982,6 +995,12 @@ function Dashboard() {
                     <MenuItem onClick={() => { downloadFile(menuTarget.id, menuTarget.name); closeMenu(); }}>
                         <ListItemIcon><DownloadIcon fontSize="small" /></ListItemIcon>
                         İndir
+                    </MenuItem>
+                )}
+                {!isReadOnly && (
+                    <MenuItem onClick={handleStartSelection}>
+                        <ListItemIcon><ChecklistIcon fontSize="small" /></ListItemIcon>
+                        Seç
                     </MenuItem>
                 )}
                 {!isReadOnly && (menuTarget?.type === "file" || menuTarget?.type === "folder") && (
