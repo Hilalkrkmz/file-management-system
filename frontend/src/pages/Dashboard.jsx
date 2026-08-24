@@ -154,12 +154,20 @@ function Dashboard() {
         e.target.value = "";
     };
 
+    const JUNK_FILE_NAMES = new Set(["desktop.ini", "thumbs.db", ".ds_store"]);
+    const isJunkFile = (name) =>
+        JUNK_FILE_NAMES.has(name.toLowerCase()) || name.startsWith(".") || name.startsWith("~$");
+
     const handleFolderUpload = async (e) => {
-        const fileList = Array.from(e.target.files);
-        if (fileList.length === 0) return;
+        const fileList = Array.from(e.target.files).filter((file) => !isJunkFile(file.name));
+        if (fileList.length === 0) {
+            e.target.value = "";
+            return;
+        }
 
         setLoading(true);
         setError("");
+        const failedFiles = [];
         try {
             const folderIdCache = new Map([["", currentFolderId]]);
 
@@ -178,11 +186,19 @@ function Dashboard() {
                 const relativePath = file.webkitRelativePath || file.name;
                 const lastSlash = relativePath.lastIndexOf("/");
                 const dirPath = lastSlash === -1 ? "" : relativePath.substring(0, lastSlash);
-                const targetFolderId = await ensureFolder(dirPath);
-                await uploadFile(targetFolderId, file);
+                try {
+                    const targetFolderId = await ensureFolder(dirPath);
+                    await uploadFile(targetFolderId, file);
+                } catch (err) {
+                    failedFiles.push(file.name);
+                }
             }
 
-            loadContents(currentFolderId);
+            await loadContents(currentFolderId);
+
+            if (failedFiles.length > 0) {
+                setError(`${failedFiles.length} dosya yüklenemedi: ${failedFiles.join(", ")}`);
+            }
         } catch (err) {
             setError(err.response?.data?.message || "Klasör yüklenemedi");
         } finally {
