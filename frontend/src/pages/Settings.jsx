@@ -16,6 +16,9 @@ import { changePassword } from "../api/userApi";
 import Divider from "@mui/material/Divider";
 import LockIcon from "@mui/icons-material/Lock";
 import TextField from "@mui/material/TextField";
+import Collapse from "@mui/material/Collapse";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 
 function Settings() {
     const { user, logout } = useAuth();
@@ -26,6 +29,7 @@ function Settings() {
     const [success, setSuccess] = useState("");
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
+    const [passwordSectionOpen, setPasswordSectionOpen] = useState(false);
 
     const loadProfile = () => {
         getMyProfile().then((res) => {
@@ -71,6 +75,7 @@ function Settings() {
             setSuccess("Şifre başarıyla değiştirildi");
             setCurrentPassword("");
             setNewPassword("");
+            setPasswordSectionOpen(false);
         } catch (err) {
             setError(err.response?.data?.message || "Şifre değiştirilemedi");
         }
@@ -133,34 +138,42 @@ function Settings() {
                 </Button>
                 <Divider sx={{ my: 3 }} />
 
-                <Typography variant="subtitle2" sx={{ mb: 1 }}>Şifre Değiştir</Typography>
-                <TextField
-                    fullWidth
-                    size="small"
-                    type="password"
-                    label="Mevcut şifre"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    sx={{ mb: 1 }}
-                />
-                <TextField
-                    fullWidth
-                    size="small"
-                    type="password"
-                    label="Yeni şifre"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    sx={{ mb: 1 }}
-                />
                 <Button
-                    variant="outlined"
-                    startIcon={<LockIcon />}
-                    onClick={handleChangePassword}
-                    disabled={!currentPassword || !newPassword}
-                    sx={{ mb: 3 }}
+                    onClick={() => setPasswordSectionOpen((open) => !open)}
+                    endIcon={passwordSectionOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    sx={{ mb: 1 }}
                 >
-                    Şifreyi Güncelle
+                    Şifre Değiştir
                 </Button>
+                <Collapse in={passwordSectionOpen}>
+                    <TextField
+                        fullWidth
+                        size="small"
+                        type="password"
+                        label="Mevcut şifre"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        sx={{ mb: 1 }}
+                    />
+                    <TextField
+                        fullWidth
+                        size="small"
+                        type="password"
+                        label="Yeni şifre"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        sx={{ mb: 1 }}
+                    />
+                    <Button
+                        variant="outlined"
+                        startIcon={<LockIcon />}
+                        onClick={handleChangePassword}
+                        disabled={!currentPassword || !newPassword}
+                        sx={{ mb: 3 }}
+                    >
+                        Şifreyi Güncelle
+                    </Button>
+                </Collapse>
             </Paper>
         </Layout>
     );

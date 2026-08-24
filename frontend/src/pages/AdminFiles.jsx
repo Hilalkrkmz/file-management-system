@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { getAllFiles, adminDeleteFile } from "../api/adminApi";
 import Layout from "../components/Layout.jsx";
 import Typography from "@mui/material/Typography";
@@ -12,7 +11,6 @@ import TableBody from "@mui/material/TableBody";
 import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
 import IconButton from "@mui/material/IconButton";
-import MuiLink from "@mui/material/Link";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -64,9 +62,6 @@ function AdminFiles() {
 
     return (
         <Layout>
-            <MuiLink component={Link} to="/admin" sx={{ display: "inline-block", mb: 2 }}>
-                ← Admin Paneli
-            </MuiLink>
             <Typography variant="h4" gutterBottom>Tüm Dosyalar</Typography>
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
