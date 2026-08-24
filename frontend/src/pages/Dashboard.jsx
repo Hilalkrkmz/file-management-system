@@ -46,6 +46,7 @@ import StarBorderIcon from "@mui/icons-material/StarBorder";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
+import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
 
 import "../styles/Dashboard.css";
 
@@ -149,6 +150,43 @@ function Dashboard() {
             loadContents(currentFolderId);
         } catch (err) {
             setError(err.response?.data?.message || "Dosya yüklenemedi");
+        }
+        e.target.value = "";
+    };
+
+    const handleFolderUpload = async (e) => {
+        const fileList = Array.from(e.target.files);
+        if (fileList.length === 0) return;
+
+        setLoading(true);
+        setError("");
+        try {
+            const folderIdCache = new Map([["", currentFolderId]]);
+
+            const ensureFolder = async (path) => {
+                if (folderIdCache.has(path)) return folderIdCache.get(path);
+                const slashIndex = path.lastIndexOf("/");
+                const parentPath = slashIndex === -1 ? "" : path.substring(0, slashIndex);
+                const folderName = slashIndex === -1 ? path : path.substring(slashIndex + 1);
+                const parentId = await ensureFolder(parentPath);
+                const res = await createFolder(folderName, parentId);
+                folderIdCache.set(path, res.data.id);
+                return res.data.id;
+            };
+
+            for (const file of fileList) {
+                const relativePath = file.webkitRelativePath || file.name;
+                const lastSlash = relativePath.lastIndexOf("/");
+                const dirPath = lastSlash === -1 ? "" : relativePath.substring(0, lastSlash);
+                const targetFolderId = await ensureFolder(dirPath);
+                await uploadFile(targetFolderId, file);
+            }
+
+            loadContents(currentFolderId);
+        } catch (err) {
+            setError(err.response?.data?.message || "Klasör yüklenemedi");
+        } finally {
+            setLoading(false);
         }
         e.target.value = "";
     };
@@ -307,12 +345,25 @@ function Dashboard() {
                             <ListItemIcon><UploadFileIcon fontSize="small" /></ListItemIcon>
                             Dosya Yükle
                         </MenuItem>
+                        <MenuItem onClick={() => { document.getElementById("folderInput").click(); setNewMenuAnchor(null); }}>
+                            <ListItemIcon><DriveFolderUploadIcon fontSize="small" /></ListItemIcon>
+                            Klasör Yükle
+                        </MenuItem>
                     </Menu>
                     <input
                         type="file"
                         onChange={handleFileUpload}
                         style={{ display: "none" }}
                         id="fileInput"
+                    />
+                    <input
+                        type="file"
+                        webkitdirectory=""
+                        directory=""
+                        multiple
+                        onChange={handleFolderUpload}
+                        style={{ display: "none" }}
+                        id="folderInput"
                     />
                 </div>
             </div>
