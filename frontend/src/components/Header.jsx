@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import InputBase from "@mui/material/InputBase";
 import IconButton from "@mui/material/IconButton";
@@ -6,7 +7,7 @@ import Badge from "@mui/material/Badge";
 import Menu from "@mui/material/Menu";
 import Typography from "@mui/material/Typography";
 import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
+import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import SearchIcon from "@mui/icons-material/Search";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
@@ -15,6 +16,7 @@ import { getNotifications, getUnreadNotificationCount, markAllNotificationsRead 
 import "../styles/Header.css";
 
 function Header({ searchValue, onSearchChange, onSearchSubmit, onClearSearch, searchPlaceholder = "Ara..." }) {
+    const navigate = useNavigate();
     const [notifAnchor, setNotifAnchor] = useState(null);
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -40,6 +42,11 @@ function Header({ searchValue, onSearchChange, onSearchSubmit, onClearSearch, se
     const handleSubmit = (e) => {
         e.preventDefault();
         onSearchSubmit?.();
+    };
+
+    const handleNotificationClick = () => {
+        setNotifAnchor(null);
+        navigate("/shared-with-me");
     };
 
     return (
@@ -73,13 +80,13 @@ function Header({ searchValue, onSearchChange, onSearchSubmit, onClearSearch, se
                     ) : (
                         <List dense disablePadding>
                             {notifications.map((n) => (
-                                <ListItem key={n.id} divider>
+                                <ListItemButton key={n.id} divider onClick={handleNotificationClick}>
                                     <ListItemText
                                         primary={n.message}
                                         secondary={new Date(n.createdAt).toLocaleString("tr-TR")}
                                         primaryTypographyProps={{ fontWeight: n.read ? 400 : 600 }}
                                     />
-                                </ListItem>
+                                </ListItemButton>
                             ))}
                         </List>
                     )}
