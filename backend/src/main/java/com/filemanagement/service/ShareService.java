@@ -23,13 +23,16 @@ public class ShareService {
     private final UserRepository userRepository;
     private final FileShareRepository fileShareRepository;
     private final ShareLinkRepository shareLinkRepository;
+    private final NotificationService notificationService;
 
     public ShareService(FileRepository fileRepository, UserRepository userRepository,
-                        FileShareRepository fileShareRepository, ShareLinkRepository shareLinkRepository) {
+                        FileShareRepository fileShareRepository, ShareLinkRepository shareLinkRepository,
+                        NotificationService notificationService) {
         this.fileRepository = fileRepository;
         this.userRepository = userRepository;
         this.fileShareRepository = fileShareRepository;
         this.shareLinkRepository = shareLinkRepository;
+        this.notificationService = notificationService;
     }
 
     private User getUser(String username) {
@@ -68,6 +71,7 @@ public class ShareService {
         share.setPermission(request.getPermission());
 
         fileShareRepository.save(share);
+        notificationService.notifyFileShared(target, sharer.getUsername(), file.getName());
 
         return new FileShareResponse(share.getId(), file.getId(), file.getName(),
                 sharer.getUsername(), target.getUsername(), share.getPermission());
