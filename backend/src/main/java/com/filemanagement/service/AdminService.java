@@ -46,7 +46,7 @@ public class AdminService {
 
     public void deleteFile(UUID fileId) {
         File file = fileRepository.findById(fileId)
-                .orElseThrow(() -> new IllegalArgumentException("Dosya bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Dosya bulunamadı"));
         file.setDeleted(true);
         file.setDeletedAt(LocalDateTime.now());
         fileRepository.save(file);
@@ -54,7 +54,7 @@ public class AdminService {
 
     public void deleteFolder(UUID folderId) {
         Folder folder = folderRepository.findById(folderId)
-                .orElseThrow(() -> new IllegalArgumentException("Klasor bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Klasör bulunamadı"));
         folder.setDeleted(true);
         folder.setDeletedAt(LocalDateTime.now());
         folderRepository.save(folder);
@@ -62,14 +62,14 @@ public class AdminService {
 
     public void deleteUser(UUID userId) {
         if (!userRepository.existsById(userId)) {
-            throw new IllegalArgumentException("Kullanici bulunamadi");
+            throw new IllegalArgumentException("Kullanıcı bulunamadı");
         }
         userRepository.deleteById(userId);
     }
 
     public UserResponse updateQuota(UUID userId, long quotaMb) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Kullanici bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı"));
 
         user.setStorageQuotaMb(quotaMb);
         userRepository.save(user);

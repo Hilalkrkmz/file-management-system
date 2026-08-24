@@ -52,11 +52,11 @@ function Sidebar() {
     }, []);
 
     const menuItems = [
-    { label: "Dosyalarim", icon: <FolderIcon />, path: "/dashboard" },
-    { label: "Son Erisilenler", icon: <HistoryIcon />, path: "/recent" },
-    { label: "Benimle Paylasilanlar", icon: <PeopleIcon />, path: "/shared-with-me" },
-    { label: "Cop Kutusu", icon: <DeleteIcon />, path: "/trash" },
-    { label: "Yildizli", icon: <StarIcon />, path: "/starred" },
+    { label: "Dosyalarım", icon: <FolderIcon />, path: "/dashboard" },
+    { label: "Son Erişilenler", icon: <HistoryIcon />, path: "/recent" },
+    { label: "Benimle Paylaşılanlar", icon: <PeopleIcon />, path: "/shared-with-me" },
+    { label: "Çöp Kutusu", icon: <DeleteIcon />, path: "/trash" },
+    { label: "Yıldızlı", icon: <StarIcon />, path: "/starred" },
 ];
 
     if (user?.role === "ADMIN") {
@@ -99,7 +99,7 @@ function Sidebar() {
                         sx={{ cursor: "pointer" }}
                     >
                         <Typography variant="caption" color="text.secondary">
-                            {storage.usedMb.toFixed(1)} MB / {storage.quotaMb} MB kullanildi
+                            {storage.usedMb.toFixed(1)} MB / {storage.quotaMb} MB kullanıldı
                         </Typography>
                         <LinearProgress
                             variant="determinate"

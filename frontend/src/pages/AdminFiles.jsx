@@ -30,7 +30,7 @@ function AdminFiles() {
     const loadFiles = () => {
         getAllFiles()
             .then((res) => setFiles(res.data))
-            .catch((err) => setError(err.response?.data?.message || "Yuklenemedi"));
+            .catch((err) => setError(err.response?.data?.message || "Yüklenemedi"));
     };
 
     useEffect(() => {
@@ -67,7 +67,7 @@ function AdminFiles() {
             <MuiLink component={Link} to="/admin" sx={{ display: "inline-block", mb: 2 }}>
                 ← Admin Paneli
             </MuiLink>
-            <Typography variant="h4" gutterBottom>Tum Dosyalar</Typography>
+            <Typography variant="h4" gutterBottom>Tüm Dosyalar</Typography>
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
             <TableContainer component={Paper} variant="outlined">
@@ -101,7 +101,7 @@ function AdminFiles() {
                                     Boyut
                                 </TableSortLabel>
                             </TableCell>
-                            <TableCell align="right">Islem</TableCell>
+                            <TableCell align="right">İşlem</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -123,7 +123,7 @@ function AdminFiles() {
             <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)}>
                 <DialogTitle>"{deleteTarget?.name}" silinsin mi?</DialogTitle>
                 <DialogActions>
-                    <Button onClick={() => setDeleteTarget(null)}>Iptal</Button>
+                    <Button onClick={() => setDeleteTarget(null)}>İptal</Button>
                     <Button color="error" variant="contained" onClick={handleConfirmDelete}>Sil</Button>
                 </DialogActions>
             </Dialog>

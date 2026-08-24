@@ -24,7 +24,7 @@ public class LocalFileStorageService implements FileStorageService {
             Path targetPath = baseDir.resolve(storageKey).normalize();
 
             if (!targetPath.startsWith(baseDir)) {
-                throw new SecurityException("Gecersiz dosya yolu tespit edildi");
+                throw new SecurityException("Geçersiz dosya yolu tespit edildi");
             }
 
             Files.copy(file.getInputStream(), targetPath);
@@ -41,12 +41,12 @@ public class LocalFileStorageService implements FileStorageService {
             Path target = Paths.get(storagePath).toAbsolutePath().normalize();
 
             if (!target.startsWith(baseDir)) {
-                throw new SecurityException("Gecersiz dosya yolu tespit edildi");
+                throw new SecurityException("Geçersiz dosya yolu tespit edildi");
             }
 
             return Files.readAllBytes(target);
         } catch (IOException e) {
-            throw new RuntimeException("Dosya okunamadi: " + e.getMessage(), e);
+            throw new RuntimeException("Dosya okunamadı: " + e.getMessage(), e);
         }
     }
 
@@ -57,7 +57,7 @@ public class LocalFileStorageService implements FileStorageService {
             Path target = Paths.get(storagePath).toAbsolutePath().normalize();
 
             if (!target.startsWith(baseDir)) {
-                throw new SecurityException("Gecersiz dosya yolu tespit edildi");
+                throw new SecurityException("Geçersiz dosya yolu tespit edildi");
             }
 
             Files.deleteIfExists(target);

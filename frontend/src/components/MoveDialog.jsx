@@ -40,13 +40,13 @@ function MoveDialog({ open, onClose, onConfirm }) {
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
             <DialogTitle>
-                Tasi: {path.map((p) => p.name).join(" / ")}
+                Taşı: {path.map((p) => p.name).join(" / ")}
             </DialogTitle>
             <DialogContent>
                 <List>
                     {path.length > 1 && (
                         <ListItemButton onClick={() => goToPathIndex(path.length - 2)}>
-                            <ListItemText primary=".. (bir ust dizin)" />
+                            <ListItemText primary=".. (bir üst dizin)" />
                         </ListItemButton>
                     )}
                     {folders.map((folder) => (
@@ -56,14 +56,14 @@ function MoveDialog({ open, onClose, onConfirm }) {
                         </ListItemButton>
                     ))}
                     {folders.length === 0 && (
-                        <ListItemText primary="Alt klasor yok" sx={{ px: 2, color: "text.secondary" }} />
+                        <ListItemText primary="Alt klasör yok" sx={{ px: 2, color: "text.secondary" }} />
                     )}
                 </List>
             </DialogContent>
             <DialogActions>
-                <Button onClick={onClose}>Iptal</Button>
+                <Button onClick={onClose}>İptal</Button>
                 <Button variant="contained" onClick={() => onConfirm(currentFolderId)}>
-                    Buraya Tasi
+                    Buraya Taşı
                 </Button>
             </DialogActions>
         </Dialog>

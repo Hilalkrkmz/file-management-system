@@ -33,7 +33,7 @@ function AdminUsers() {
     const loadUsers = () => {
         getAllUsers()
             .then((res) => setUsers(res.data))
-            .catch((err) => setError(err.response?.data?.message || "Yuklenemedi"));
+            .catch((err) => setError(err.response?.data?.message || "Yüklenemedi"));
     };
 
     useEffect(() => {
@@ -52,7 +52,7 @@ function AdminUsers() {
             setQuotaTarget(null);
             loadUsers();
         } catch (err) {
-            setError(err.response?.data?.message || "Kota guncellenemedi");
+            setError(err.response?.data?.message || "Kota güncellenemedi");
         }
     };
 
@@ -83,7 +83,7 @@ function AdminUsers() {
 
     return (
         <Layout>
-            <Typography variant="h4" gutterBottom>Kullanicilar</Typography>
+            <Typography variant="h4" gutterBottom>Kullanıcılar</Typography>
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
             <TableContainer component={Paper} variant="outlined">
@@ -96,7 +96,7 @@ function AdminUsers() {
                                     direction={orderBy === "username" ? order : "asc"}
                                     onClick={() => handleSort("username")}
                                 >
-                                    Kullanici Adi
+                                    Kullanıcı Adı
                                 </TableSortLabel>
                             </TableCell>
                             <TableCell>
@@ -126,7 +126,7 @@ function AdminUsers() {
                                     Kota (MB)
                                 </TableSortLabel>
                             </TableCell>
-                            <TableCell align="right">Islemler</TableCell>
+                            <TableCell align="right">İşlemler</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -151,7 +151,7 @@ function AdminUsers() {
             </TableContainer>
 
             <Dialog open={!!quotaTarget} onClose={() => setQuotaTarget(null)}>
-                <DialogTitle>"{quotaTarget?.username}" icin kota guncelle</DialogTitle>
+                <DialogTitle>"{quotaTarget?.username}" için kota güncelle</DialogTitle>
                 <DialogContent>
                     <TextField
                         autoFocus
@@ -164,15 +164,15 @@ function AdminUsers() {
                     />
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setQuotaTarget(null)}>Iptal</Button>
+                    <Button onClick={() => setQuotaTarget(null)}>İptal</Button>
                     <Button variant="contained" onClick={handleConfirmQuota}>Kaydet</Button>
                 </DialogActions>
             </Dialog>
 
             <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)}>
-                <DialogTitle>"{deleteTarget?.username}" kullanicisi silinsin mi? Bu islem geri alinamaz.</DialogTitle>
+                <DialogTitle>"{deleteTarget?.username}" kullanıcısı silinsin mi? Bu işlem geri alınamaz.</DialogTitle>
                 <DialogActions>
-                    <Button onClick={() => setDeleteTarget(null)}>Iptal</Button>
+                    <Button onClick={() => setDeleteTarget(null)}>İptal</Button>
                     <Button color="error" variant="contained" onClick={handleConfirmDelete}>Sil</Button>
                 </DialogActions>
             </Dialog>

@@ -25,10 +25,10 @@ public class AuthService {
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new IllegalArgumentException("Bu kullanici adi zaten alinmis");
+            throw new IllegalArgumentException("Bu kullanıcı adı zaten alınmış");
         }
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Bu email zaten kayitli");
+            throw new IllegalArgumentException("Bu email zaten kayıtlı");
         }
 
         User user = new User();
@@ -45,10 +45,10 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("Email veya sifre hatali"));
+                .orElseThrow(() -> new IllegalArgumentException("Email veya şifre hatalı"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new IllegalArgumentException("Email veya sifre hatali");
+            throw new IllegalArgumentException("Email veya şifre hatalı");
         }
 
         String token = jwtUtil.generateToken(user.getUsername(), user.getRole().name());

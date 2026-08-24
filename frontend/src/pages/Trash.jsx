@@ -36,8 +36,8 @@ function Trash() {
     const [deleteTarget, setDeleteTarget] = useState(null);
 
     const loadTrash = () => {
-        getFolderTrash().then((res) => setFolders(res.data)).catch((err) => setError(err.response?.data?.message || "Yuklenemedi"));
-        getFileTrash().then((res) => setFiles(res.data)).catch((err) => setError(err.response?.data?.message || "Yuklenemedi"));
+        getFolderTrash().then((res) => setFolders(res.data)).catch((err) => setError(err.response?.data?.message || "Yüklenemedi"));
+        getFileTrash().then((res) => setFiles(res.data)).catch((err) => setError(err.response?.data?.message || "Yüklenemedi"));
     };
 
     useEffect(() => {
@@ -47,7 +47,7 @@ function Trash() {
     const handleConfirmRestore = async () => {
         if (!restoreTarget) return;
         try {
-            if (restoreTarget.type === "Klasor") {
+            if (restoreTarget.type === "Klasör") {
                 await restoreFolder(restoreTarget.id);
             } else {
                 await restoreFile(restoreTarget.id);
@@ -55,14 +55,14 @@ function Trash() {
             setRestoreTarget(null);
             loadTrash();
         } catch (err) {
-            setError(err.response?.data?.message || "Geri yuklenemedi");
+            setError(err.response?.data?.message || "Geri yüklenemedi");
         }
     };
 
     const handleConfirmPermanentDelete = async () => {
         if (!deleteTarget) return;
         try {
-            if (deleteTarget.type === "Klasor") {
+            if (deleteTarget.type === "Klasör") {
                 await permanentDeleteFolder(deleteTarget.id);
             } else {
                 await permanentDeleteFile(deleteTarget.id);
@@ -70,22 +70,22 @@ function Trash() {
             setDeleteTarget(null);
             loadTrash();
         } catch (err) {
-            setError(err.response?.data?.message || "Kalici olarak silinemedi");
+            setError(err.response?.data?.message || "Kalıcı olarak silinemedi");
         }
     };
 
     const combinedRows = [
-        ...folders.map((f) => ({ ...f, type: "Klasor" })),
+        ...folders.map((f) => ({ ...f, type: "Klasör" })),
         ...files.map((f) => ({ ...f, type: "Dosya" })),
     ].filter((row) => row.name.toLowerCase().includes(search.toLowerCase()));
 
     return (
         <Layout>
             <div className="trash-topbar">
-                <Typography variant="h4">Cop Kutusu</Typography>
+                <Typography variant="h4">Çöp Kutusu</Typography>
                 <TextField
                     size="small"
-                    placeholder="Cop kutusunda ara..."
+                    placeholder="Çöp kutusunda ara..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     InputProps={{
@@ -105,8 +105,8 @@ function Trash() {
                     <TableHead>
                         <TableRow>
                             <TableCell>Ad</TableCell>
-                            <TableCell>Tur</TableCell>
-                            <TableCell align="right">Islemler</TableCell>
+                            <TableCell>Tür</TableCell>
+                            <TableCell align="right">İşlemler</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -114,7 +114,7 @@ function Trash() {
                             <TableRow key={`${row.type}-${row.id}`} hover>
                                 <TableCell>
                                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                        {row.type === "Klasor" ? (
+                                        {row.type === "Klasör" ? (
                                             <FolderIcon fontSize="small" color="primary" />
                                         ) : (
                                             <InsertDriveFileIcon fontSize="small" color="action" />
@@ -126,10 +126,10 @@ function Trash() {
                                     <Chip label={row.type} size="small" />
                                 </TableCell>
                                 <TableCell align="right">
-                                    <IconButton size="small" onClick={() => setRestoreTarget(row)} title="Geri Yukle">
+                                    <IconButton size="small" onClick={() => setRestoreTarget(row)} title="Geri Yükle">
                                         <RestoreIcon fontSize="small" />
                                     </IconButton>
-                                    <IconButton size="small" onClick={() => setDeleteTarget(row)} title="Kalici Sil" color="error">
+                                    <IconButton size="small" onClick={() => setDeleteTarget(row)} title="Kalıcı Sil" color="error">
                                         <DeleteForeverIcon fontSize="small" />
                                     </IconButton>
                                 </TableCell>
@@ -139,7 +139,7 @@ function Trash() {
                             <TableRow>
                                 <TableCell colSpan={3} align="center">
                                     <Typography color="text.secondary" sx={{ py: 3 }}>
-                                        Cop kutusu bos
+                                        Çöp kutusu boş
                                     </Typography>
                                 </TableCell>
                             </TableRow>
@@ -149,19 +149,19 @@ function Trash() {
             </TableContainer>
 
             <Dialog open={!!restoreTarget} onClose={() => setRestoreTarget(null)}>
-                <DialogTitle>"{restoreTarget?.name}" geri yuklensin mi?</DialogTitle>
+                <DialogTitle>"{restoreTarget?.name}" geri yüklensin mi?</DialogTitle>
                 <DialogActions>
-                    <Button onClick={() => setRestoreTarget(null)}>Iptal</Button>
-                    <Button variant="contained" onClick={handleConfirmRestore}>Geri Yukle</Button>
+                    <Button onClick={() => setRestoreTarget(null)}>İptal</Button>
+                    <Button variant="contained" onClick={handleConfirmRestore}>Geri Yükle</Button>
                 </DialogActions>
             </Dialog>
 
             <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)}>
-                <DialogTitle>"{deleteTarget?.name}" kalici olarak silinsin mi? Bu islem geri alinamaz.</DialogTitle>
+                <DialogTitle>"{deleteTarget?.name}" kalıcı olarak silinsin mi? Bu işlem geri alınamaz.</DialogTitle>
                 <DialogActions>
-                    <Button onClick={() => setDeleteTarget(null)}>Iptal</Button>
+                    <Button onClick={() => setDeleteTarget(null)}>İptal</Button>
                     <Button color="error" variant="contained" onClick={handleConfirmPermanentDelete}>
-                        Kalici Sil
+                        Kalıcı Sil
                     </Button>
                 </DialogActions>
             </Dialog>

@@ -23,16 +23,16 @@ function Register() {
             await register(username, email, password);
             navigate("/login", { state: { registered: true } });
         } catch (err) {
-            setError(err.response?.data?.message || "Kayit basarisiz");
+            setError(err.response?.data?.message || "Kayıt başarısız");
         }
     };
 
     return (
         <Paper elevation={3} className="auth-container">
-            <Typography variant="h5" className="auth-title">Kayit Ol</Typography>
+            <Typography variant="h5" className="auth-title">Kayıt Ol</Typography>
             <form onSubmit={handleSubmit} className="auth-form">
                 <TextField
-                    label="Kullanici adi"
+                    label="Kullanıcı adı"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     fullWidth
@@ -45,17 +45,17 @@ function Register() {
                     fullWidth
                 />
                 <TextField
-                    label="Sifre"
+                    label="Şifre"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     fullWidth
                 />
                 {error && <Alert severity="error">{error}</Alert>}
-                <Button type="submit" variant="contained" fullWidth>Kayit Ol</Button>
+                <Button type="submit" variant="contained" fullWidth>Kayıt Ol</Button>
             </form>
             <Typography className="auth-footer">
-                Zaten hesabin var mi? <Link to="/login">Giris Yap</Link>
+                Zaten hesabın var mı? <Link to="/login">Giriş Yap</Link>
             </Typography>
         </Paper>
     );

@@ -75,7 +75,7 @@ function Header({ searchValue, onSearchChange, onSearchSubmit, onClearSearch, se
                 <Box sx={{ width: 320, maxHeight: 360, overflowY: "auto" }}>
                     {notifications.length === 0 ? (
                         <Typography variant="body2" color="text.secondary" sx={{ px: 2, py: 1.5 }}>
-                            Henuz bildirim yok
+                            Henüz bildirim yok
                         </Typography>
                     ) : (
                         <List dense disablePadding>

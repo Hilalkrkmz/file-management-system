@@ -59,7 +59,7 @@ public class FileService {
 
     private User getUser(String username) {
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("Kullanici bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı"));
     }
 
     private Set<String> allowedExtensions() {
@@ -75,21 +75,21 @@ public class FileService {
         Folder folder = null;
         if (folderId != null) {
             folder = folderRepository.findById(folderId)
-                    .orElseThrow(() -> new IllegalArgumentException("Klasor bulunamadi"));
+                    .orElseThrow(() -> new IllegalArgumentException("Klasör bulunamadı"));
 
             if (!folder.getOwner().getId().equals(owner.getId())) {
-                throw new IllegalArgumentException("Bu klasore erisim yetkiniz yok");
+                throw new IllegalArgumentException("Bu klasöre erişim yetkiniz yok");
             }
         }
 
         String originalName = multipartFile.getOriginalFilename();
         if (originalName == null || !originalName.contains(".")) {
-            throw new IllegalArgumentException("Gecersiz dosya adi");
+            throw new IllegalArgumentException("Geçersiz dosya adı");
         }
 
         String extension = originalName.substring(originalName.lastIndexOf('.') + 1).toLowerCase();
         if (!allowedExtensions().contains(extension)) {
-            throw new IllegalArgumentException("Desteklenmeyen dosya uzantisi: " + extension);
+            throw new IllegalArgumentException("Desteklenmeyen dosya uzantısı: " + extension);
         }
 
         String declaredContentType = multipartFile.getContentType();
@@ -99,19 +99,19 @@ public class FileService {
                 && !declaredContentType.equals(expectedMimeType)
                 && !declaredContentType.equals("application/octet-stream")) {
             throw new IllegalArgumentException(
-                    "Dosya icerigi uzantisiyla uyusmuyor (beklenen: " + expectedMimeType
+                    "Dosya içeriği uzantısıyla uyuşmuyor (beklenen: " + expectedMimeType
                             + ", gelen: " + declaredContentType + ")");
         }
 
         long maxBytes = maxFileSizeMb * 1024 * 1024;
         if (multipartFile.getSize() > maxBytes) {
-            throw new IllegalArgumentException("Dosya boyutu " + maxFileSizeMb + "MB limitini asiyor");
+            throw new IllegalArgumentException("Dosya boyutu " + maxFileSizeMb + "MB limitini aşıyor");
         }
 
         long currentUsedBytes = fileRepository.sumSizeByOwner(owner);
         long quotaBytes = owner.getStorageQuotaMb() * 1024 * 1024;
         if (currentUsedBytes + multipartFile.getSize() > quotaBytes) {
-            throw new IllegalArgumentException("Depolama kotanizi asiyorsunuz (kota: "
+            throw new IllegalArgumentException("Depolama kotanızı aşıyorsunuz (kota: "
                     + owner.getStorageQuotaMb() + "MB)");
         }
 
@@ -166,10 +166,10 @@ public class FileService {
         }
 
         Folder folder = folderRepository.findById(folderId)
-                .orElseThrow(() -> new IllegalArgumentException("Klasor bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Klasör bulunamadı"));
 
         if (!folder.getOwner().getId().equals(owner.getId())) {
-            throw new IllegalArgumentException("Bu klasore erisim yetkiniz yok");
+            throw new IllegalArgumentException("Bu klasöre erişim yetkiniz yok");
         }
 
         return fileRepository.findByFolderAndIsDeletedFalse(folder)
@@ -191,13 +191,13 @@ public class FileService {
 
     private com.filemanagement.entity.File getOwnedOrSharedFile(User user, UUID fileId) {
         com.filemanagement.entity.File file = fileRepository.findById(fileId)
-                .orElseThrow(() -> new IllegalArgumentException("Dosya bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Dosya bulunamadı"));
 
         boolean isOwner = file.getOwner().getId().equals(user.getId());
         boolean isSharedWithUser = fileShareRepository.existsByFileAndSharedWith(file, user);
 
         if (!isOwner && !isSharedWithUser) {
-            throw new IllegalArgumentException("Bu dosyaya erisim yetkiniz yok");
+            throw new IllegalArgumentException("Bu dosyaya erişim yetkiniz yok");
         }
         return file;
     }
@@ -205,10 +205,10 @@ public class FileService {
     public void deleteFile(String username, UUID fileId) {
         User owner = getUser(username);
         com.filemanagement.entity.File file = fileRepository.findById(fileId)
-                .orElseThrow(() -> new IllegalArgumentException("Dosya bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Dosya bulunamadı"));
 
         if (!file.getOwner().getId().equals(owner.getId())) {
-            throw new IllegalArgumentException("Bu dosyayi silme yetkiniz yok");
+            throw new IllegalArgumentException("Bu dosyayı silme yetkiniz yok");
         }
 
         file.setDeleted(true);
@@ -220,15 +220,15 @@ public class FileService {
         User owner = getUser(username);
 
         com.filemanagement.entity.File file = fileRepository.findById(fileId)
-                .orElseThrow(() -> new IllegalArgumentException("Dosya bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Dosya bulunamadı"));
         if (!file.getOwner().getId().equals(owner.getId())) {
-            throw new IllegalArgumentException("Bu dosyayi tasima yetkiniz yok");
+            throw new IllegalArgumentException("Bu dosyayı taşıma yetkiniz yok");
         }
 
         Folder targetFolder = folderRepository.findById(targetFolderId)
-                .orElseThrow(() -> new IllegalArgumentException("Hedef klasor bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Hedef klasör bulunamadı"));
         if (!targetFolder.getOwner().getId().equals(owner.getId())) {
-            throw new IllegalArgumentException("Hedef klasore erisim yetkiniz yok");
+            throw new IllegalArgumentException("Hedef klasöre erişim yetkiniz yok");
         }
 
         file.setFolder(targetFolder);
@@ -282,10 +282,10 @@ public class FileService {
     public void restoreFile(String username, UUID fileId) {
         User owner = getUser(username);
         com.filemanagement.entity.File file = fileRepository.findById(fileId)
-                .orElseThrow(() -> new IllegalArgumentException("Dosya bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Dosya bulunamadı"));
 
         if (!file.getOwner().getId().equals(owner.getId())) {
-            throw new IllegalArgumentException("Bu dosyayi geri yukleme yetkiniz yok");
+            throw new IllegalArgumentException("Bu dosyayı geri yükleme yetkiniz yok");
         }
 
         file.setDeleted(false);
@@ -296,10 +296,10 @@ public class FileService {
     public FileResponse renameFile(String username, UUID fileId, String newName) {
         User owner = getUser(username);
         com.filemanagement.entity.File file = fileRepository.findById(fileId)
-                .orElseThrow(() -> new IllegalArgumentException("Dosya bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Dosya bulunamadı"));
 
         if (!file.getOwner().getId().equals(owner.getId())) {
-            throw new IllegalArgumentException("Bu dosyayi yeniden adlandirma yetkiniz yok");
+            throw new IllegalArgumentException("Bu dosyayı yeniden adlandırma yetkiniz yok");
         }
 
         file.setName(newName);
@@ -310,10 +310,10 @@ public class FileService {
     public void permanentlyDeleteFile(String username, UUID fileId) {
         User owner = getUser(username);
         com.filemanagement.entity.File file = fileRepository.findById(fileId)
-                .orElseThrow(() -> new IllegalArgumentException("Dosya bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Dosya bulunamadı"));
 
         if (!file.getOwner().getId().equals(owner.getId())) {
-            throw new IllegalArgumentException("Bu dosyayi silme yetkiniz yok");
+            throw new IllegalArgumentException("Bu dosyayı silme yetkiniz yok");
         }
 
         storageService.delete(file.getStoragePath());
@@ -332,10 +332,10 @@ public class FileService {
     public FileResponse toggleStar(String username, UUID fileId) {
         User owner = getUser(username);
         com.filemanagement.entity.File file = fileRepository.findById(fileId)
-                .orElseThrow(() -> new IllegalArgumentException("Dosya bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Dosya bulunamadı"));
 
         if (!file.getOwner().getId().equals(owner.getId())) {
-            throw new IllegalArgumentException("Bu dosya uzerinde yetkiniz yok");
+            throw new IllegalArgumentException("Bu dosya üzerinde yetkiniz yok");
         }
 
         file.setStarred(!file.isStarred());

@@ -37,14 +37,14 @@ public class ShareService {
 
     private User getUser(String username) {
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("Kullanici bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı"));
     }
 
     private File getOwnedFile(User owner, UUID fileId) {
         File file = fileRepository.findById(fileId)
-                .orElseThrow(() -> new IllegalArgumentException("Dosya bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Dosya bulunamadı"));
         if (!file.getOwner().getId().equals(owner.getId())) {
-            throw new IllegalArgumentException("Sadece kendi dosyalarinizi paylasabilirsiniz");
+            throw new IllegalArgumentException("Sadece kendi dosyalarınızı paylaşabilirsiniz");
         }
         return file;
     }
@@ -54,14 +54,14 @@ public class ShareService {
         File file = getOwnedFile(sharer, request.getFileId());
 
         User target = userRepository.findByEmail(request.getTargetEmail())
-                .orElseThrow(() -> new IllegalArgumentException("Bu email ile kayitli kullanici bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Bu email ile kayıtlı kullanıcı bulunamadı"));
 
         if (target.getId().equals(sharer.getId())) {
-            throw new IllegalArgumentException("Kendinizle paylasim yapamazsiniz");
+            throw new IllegalArgumentException("Kendinizle paylaşım yapamazsınız");
         }
 
         if (fileShareRepository.existsByFileAndSharedWith(file, target)) {
-            throw new IllegalArgumentException("Bu dosya zaten bu kullaniciyla paylasilmis");
+            throw new IllegalArgumentException("Bu dosya zaten bu kullanıcıyla paylaşılmış");
         }
 
         FileShare share = new FileShare();
@@ -105,10 +105,10 @@ public class ShareService {
 
     public byte[] downloadViaLink(String token, FileStorageService storageService) {
         ShareLink link = shareLinkRepository.findByToken(token)
-                .orElseThrow(() -> new IllegalArgumentException("Link bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Link bulunamadı"));
 
         if (link.getExpiresAt() != null && link.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Bu paylasim linkinin suresi dolmus");
+            throw new IllegalArgumentException("Bu paylaşım linkinin süresi dolmuş");
         }
 
         return storageService.load(link.getFile().getStoragePath());
@@ -116,10 +116,10 @@ public class ShareService {
 
     public File getFileByToken(String token) {
         ShareLink link = shareLinkRepository.findByToken(token)
-                .orElseThrow(() -> new IllegalArgumentException("Link bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Link bulunamadı"));
 
         if (link.getExpiresAt() != null && link.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Bu paylasim linkinin suresi dolmus");
+            throw new IllegalArgumentException("Bu paylaşım linkinin süresi dolmuş");
         }
 
         return link.getFile();
@@ -138,10 +138,10 @@ public class ShareService {
     public void removeShare(String username, UUID shareId) {
         User owner = getUser(username);
         FileShare share = fileShareRepository.findById(shareId)
-                .orElseThrow(() -> new IllegalArgumentException("Paylasim bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Paylaşım bulunamadı"));
 
         if (!share.getFile().getOwner().getId().equals(owner.getId())) {
-            throw new IllegalArgumentException("Bu paylasimi kaldirma yetkiniz yok");
+            throw new IllegalArgumentException("Bu paylaşımı kaldırma yetkiniz yok");
         }
 
         fileShareRepository.delete(share);

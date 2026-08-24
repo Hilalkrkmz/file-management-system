@@ -13,14 +13,14 @@ function Admin() {
 
     const sections = [
         {
-            title: "Kullanicilar",
-            description: "Kayitli kullanicilari goruntule, kota duzenle",
+            title: "Kullanıcılar",
+            description: "Kayıtlı kullanıcıları görüntüle, kota düzenle",
             icon: <PeopleIcon fontSize="large" color="primary" />,
             path: "/admin/users",
         },
         {
-            title: "Tum Dosyalar",
-            description: "Sistemdeki tum dosyalari goruntule ve yonet",
+            title: "Tüm Dosyalar",
+            description: "Sistemdeki tüm dosyaları görüntüle ve yönet",
             icon: <InsertDriveFileIcon fontSize="large" color="primary" />,
             path: "/admin/files",
         },

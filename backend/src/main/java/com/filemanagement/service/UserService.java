@@ -25,7 +25,7 @@ public class UserService {
 
     private User getUser(String username) {
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("Kullanici bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı"));
     }
 
     public UserProfileResponse getProfile(String username) {
@@ -39,12 +39,12 @@ public class UserService {
 
         String contentType = photo.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
-            throw new IllegalArgumentException("Sadece resim dosyalari yuklenebilir");
+            throw new IllegalArgumentException("Sadece resim dosyaları yüklenebilir");
         }
 
         long maxBytes = 5 * 1024 * 1024;
         if (photo.getSize() > maxBytes) {
-            throw new IllegalArgumentException("Profil fotografi 5MB limitini asiyor");
+            throw new IllegalArgumentException("Profil fotoğrafı 5MB limitini aşıyor");
         }
 
         String storageKey = "avatar_" + UUID.randomUUID();
@@ -57,7 +57,7 @@ public class UserService {
     public byte[] getPhoto(String username) {
         User user = getUser(username);
         if (user.getProfilePhotoPath() == null) {
-            throw new IllegalArgumentException("Profil fotografi yok");
+            throw new IllegalArgumentException("Profil fotoğrafı yok");
         }
         return storageService.load(user.getProfilePhotoPath());
     }
@@ -66,7 +66,7 @@ public class UserService {
         User user = getUser(username);
 
         if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
-            throw new IllegalArgumentException("Mevcut sifre yanlis");
+            throw new IllegalArgumentException("Mevcut şifre yanlış");
         }
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));

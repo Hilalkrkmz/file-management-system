@@ -19,7 +19,7 @@ function StorageOverview() {
     useEffect(() => {
         getStorageUsage()
             .then((res) => setStorage(res.data))
-            .catch((err) => setError(err.response?.data?.message || "Yuklenemedi"));
+            .catch((err) => setError(err.response?.data?.message || "Yüklenemedi"));
     }, []);
 
     if (error) {
@@ -33,7 +33,7 @@ function StorageOverview() {
     if (!storage) {
         return (
             <Layout>
-                <Typography>Yukleniyor...</Typography>
+                <Typography>Yükleniyor...</Typography>
             </Layout>
         );
     }
@@ -43,13 +43,13 @@ function StorageOverview() {
 
     return (
         <Layout>
-            <Typography variant="h4" gutterBottom>Depolama Kullanimi</Typography>
+            <Typography variant="h4" gutterBottom>Depolama Kullanımı</Typography>
 
             <Paper variant="outlined" sx={{ p: 3, maxWidth: 500, mb: 3 }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
                     <StorageIcon color="primary" />
                     <Typography variant="h6">
-                        {storage.usedMb.toFixed(1)} MB / {storage.quotaMb} MB kullanildi
+                        {storage.usedMb.toFixed(1)} MB / {storage.quotaMb} MB kullanıldı
                     </Typography>
                 </Box>
                 <LinearProgress
@@ -59,7 +59,7 @@ function StorageOverview() {
                     color={usagePercent > 90 ? "error" : "primary"}
                 />
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    %{usagePercent.toFixed(1)} kullanildi
+                    %{usagePercent.toFixed(1)} kullanıldı
                 </Typography>
             </Paper>
 
@@ -68,14 +68,14 @@ function StorageOverview() {
                     <Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
                         <InsertDriveFileIcon color="action" />
                         <Typography variant="h6">{storage.fileCount}</Typography>
-                        <Typography variant="body2" color="text.secondary">Dosya sayisi</Typography>
+                        <Typography variant="body2" color="text.secondary">Dosya sayısı</Typography>
                     </Paper>
                 </Grid>
                 <Grid item xs={4}>
                     <Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
                         <DonutLargeIcon color="action" />
                         <Typography variant="h6">{storage.usedMb.toFixed(1)} MB</Typography>
-                        <Typography variant="body2" color="text.secondary">Kullanilan</Typography>
+                        <Typography variant="body2" color="text.secondary">Kullanılan</Typography>
                     </Paper>
                 </Grid>
                 <Grid item xs={4}>

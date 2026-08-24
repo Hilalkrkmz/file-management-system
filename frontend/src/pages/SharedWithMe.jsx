@@ -18,12 +18,12 @@ function SharedWithMe() {
     useEffect(() => {
         getSharedWithMe()
             .then((res) => setShares(res.data))
-            .catch((err) => setError(err.response?.data?.message || "Yuklenemedi"));
+            .catch((err) => setError(err.response?.data?.message || "Yüklenemedi"));
     }, []);
 
     return (
         <Layout>
-            <Typography variant="h4" gutterBottom>Benimle Paylasilanlar</Typography>
+            <Typography variant="h4" gutterBottom>Benimle Paylaşılanlar</Typography>
             {error && <Alert severity="error">{error}</Alert>}
             <List>
                 {shares.map((s) => (
@@ -38,13 +38,13 @@ function SharedWithMe() {
                         <span style={{ marginRight: 8, display: "flex" }}>{getFileIcon(s.fileName?.split(".").pop())}</span>
                         <ListItemText
                             primary={s.fileName}
-                            secondary={`Paylasan: ${s.sharedByUsername} (${s.permission})`}
+                            secondary={`Paylaşan: ${s.sharedByUsername} (${s.permission})`}
                         />
                     </ListItem>
                 ))}
             </List>
             {shares.length === 0 && (
-                <Typography color="text.secondary">Henuz sizinle paylasilan bir dosya yok.</Typography>
+                <Typography color="text.secondary">Henüz sizinle paylaşılan bir dosya yok.</Typography>
             )}
         </Layout>
     );

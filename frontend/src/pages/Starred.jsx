@@ -18,7 +18,7 @@ function Starred() {
     const load = () => {
         getStarredFiles()
             .then((res) => setFiles(res.data))
-            .catch((err) => setError(err.response?.data?.message || "Yuklenemedi"));
+            .catch((err) => setError(err.response?.data?.message || "Yüklenemedi"));
     };
 
     useEffect(() => {
@@ -30,13 +30,13 @@ function Starred() {
             await toggleStar(id);
             load();
         } catch (err) {
-            setError(err.response?.data?.message || "Islem basarisiz");
+            setError(err.response?.data?.message || "İşlem başarısız");
         }
     };
 
     return (
         <Layout>
-            <Typography variant="h4" gutterBottom>Yildizli Dosyalar</Typography>
+            <Typography variant="h4" gutterBottom>Yıldızlı Dosyalar</Typography>
             {error && <Alert severity="error">{error}</Alert>}
 
             <List>
@@ -48,7 +48,7 @@ function Starred() {
                                 <IconButton onClick={() => downloadFile(file.id, file.name)}>
                                     <DownloadIcon />
                                 </IconButton>
-                                <IconButton onClick={() => handleUnstar(file.id)} title="Yildizi kaldir">
+                                <IconButton onClick={() => handleUnstar(file.id)} title="Yıldızı kaldır">
                                     <StarIcon sx={{ color: "#FFB400" }} />
                                 </IconButton>
                             </>
@@ -64,7 +64,7 @@ function Starred() {
             </List>
 
             {files.length === 0 && (
-                <Typography color="text.secondary">Henuz yildizli dosya yok.</Typography>
+                <Typography color="text.secondary">Henüz yıldızlı dosya yok.</Typography>
             )}
         </Layout>
     );

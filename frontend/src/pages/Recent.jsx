@@ -26,8 +26,8 @@ function groupLabel(dateStr) {
     const weekAgo = new Date(now);
     weekAgo.setDate(now.getDate() - 7);
 
-    if (isToday) return "Bugun";
-    if (isYesterday) return "Dun";
+    if (isToday) return "Bugün";
+    if (isYesterday) return "Dün";
     if (date > weekAgo) return "Son Hafta";
     return date.toLocaleDateString("tr-TR", { day: "numeric", month: "long" });
 }
@@ -45,7 +45,7 @@ function Recent() {
     const load = () => {
         getRecentFiles()
             .then((res) => setFiles(res.data))
-            .catch((err) => setError(err.response?.data?.message || "Yuklenemedi"));
+            .catch((err) => setError(err.response?.data?.message || "Yüklenemedi"));
     };
 
     useEffect(() => {
@@ -79,7 +79,7 @@ function Recent() {
 
     return (
         <Layout>
-            <Typography variant="h4" gutterBottom>Son Erisilenler</Typography>
+            <Typography variant="h4" gutterBottom>Son Erişilenler</Typography>
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
             {Object.entries(groups).map(([label, groupFiles]) => (
@@ -122,13 +122,13 @@ function Recent() {
             ))}
 
             {files.length === 0 && (
-                <Typography color="text.secondary">Henuz erisim gecmisi yok.</Typography>
+                <Typography color="text.secondary">Henüz erişim geçmişi yok.</Typography>
             )}
 
             <Menu anchorEl={menuAnchor} open={!!menuAnchor} onClose={closeMenu}>
                 <MenuItem onClick={() => { downloadFile(menuTarget.id, menuTarget.name); closeMenu(); }}>
                     <ListItemIcon><DownloadIcon fontSize="small" /></ListItemIcon>
-                    Indir
+                    İndir
                 </MenuItem>
                 <MenuItem onClick={handleDelete}>
                     <ListItemIcon><DeleteIcon fontSize="small" /></ListItemIcon>

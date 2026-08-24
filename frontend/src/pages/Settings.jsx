@@ -36,7 +36,7 @@ function Settings() {
                     .then((photoRes) => setPhotoUrl(URL.createObjectURL(photoRes.data)))
                     .catch(() => { });
             }
-        }).catch((err) => setError(err.response?.data?.message || "Yuklenemedi"));
+        }).catch((err) => setError(err.response?.data?.message || "Yüklenemedi"));
     };
 
     useEffect(() => {
@@ -50,10 +50,10 @@ function Settings() {
         setSuccess("");
         try {
             await uploadProfilePhoto(file);
-            setSuccess("Profil fotografi guncellendi");
+            setSuccess("Profil fotoğrafı güncellendi");
             loadProfile();
         } catch (err) {
-            setError(err.response?.data?.message || "Yuklenemedi");
+            setError(err.response?.data?.message || "Yüklenemedi");
         }
         e.target.value = "";
     };
@@ -68,11 +68,11 @@ function Settings() {
         setSuccess("");
         try {
             await changePassword(currentPassword, newPassword);
-            setSuccess("Sifre basariyla degistirildi");
+            setSuccess("Şifre başarıyla değiştirildi");
             setCurrentPassword("");
             setNewPassword("");
         } catch (err) {
-            setError(err.response?.data?.message || "Sifre degistirilemedi");
+            setError(err.response?.data?.message || "Şifre değiştirilemedi");
         }
     };
 
@@ -129,16 +129,16 @@ function Settings() {
                     startIcon={<LogoutIcon />}
                     onClick={handleLogout}
                 >
-                    Cikis Yap
+                    Çıkış Yap
                 </Button>
                 <Divider sx={{ my: 3 }} />
 
-                <Typography variant="subtitle2" sx={{ mb: 1 }}>Sifre Degistir</Typography>
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>Şifre Değiştir</Typography>
                 <TextField
                     fullWidth
                     size="small"
                     type="password"
-                    label="Mevcut sifre"
+                    label="Mevcut şifre"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     sx={{ mb: 1 }}
@@ -147,7 +147,7 @@ function Settings() {
                     fullWidth
                     size="small"
                     type="password"
-                    label="Yeni sifre"
+                    label="Yeni şifre"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     sx={{ mb: 1 }}
@@ -159,7 +159,7 @@ function Settings() {
                     disabled={!currentPassword || !newPassword}
                     sx={{ mb: 3 }}
                 >
-                    Sifreyi Guncelle
+                    Şifreyi Güncelle
                 </Button>
             </Paper>
         </Layout>

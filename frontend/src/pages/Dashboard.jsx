@@ -84,7 +84,7 @@ function Dashboard() {
             const filesRes = await getFiles(folderId);
             setFiles(filesRes.data);
         } catch (err) {
-            setError(err.response?.data?.message || "Icerik yuklenemedi");
+            setError(err.response?.data?.message || "İçerik yüklenemedi");
         } finally {
             setLoading(false);
         }
@@ -121,7 +121,7 @@ function Dashboard() {
             setNewFolderDialogOpen(false);
             loadContents(currentFolderId);
         } catch (err) {
-            setError(err.response?.data?.message || "Klasor olusturulamadi");
+            setError(err.response?.data?.message || "Klasör oluşturulamadı");
         }
     };
 
@@ -147,7 +147,7 @@ function Dashboard() {
             await uploadFile(currentFolderId, file);
             loadContents(currentFolderId);
         } catch (err) {
-            setError(err.response?.data?.message || "Dosya yuklenemedi");
+            setError(err.response?.data?.message || "Dosya yüklenemedi");
         }
         e.target.value = "";
     };
@@ -160,7 +160,7 @@ function Dashboard() {
             const res = await getSharesForFile(shareTarget);
             setCurrentShares(res.data);
         } catch (err) {
-            setError(err.response?.data?.message || "Paylasilamadi");
+            setError(err.response?.data?.message || "Paylaşılamadı");
         }
     };
 
@@ -169,7 +169,7 @@ function Dashboard() {
             await removeShare(shareId);
             setCurrentShares(currentShares.filter((s) => s.id !== shareId));
         } catch (err) {
-            setError(err.response?.data?.message || "Paylasim kaldirilamadi");
+            setError(err.response?.data?.message || "Paylaşım kaldırılamadı");
         }
     };
 
@@ -178,9 +178,9 @@ function Dashboard() {
             const res = await createShareLink(fileId, "DOWNLOAD", 24);
             const link = `${window.location.origin}/share/${res.data.token}`;
             navigator.clipboard.writeText(link);
-            setSnackbarMessage("Link kopyalandi (24 saat gecerli)");
+            setSnackbarMessage("Link kopyalandı (24 saat geçerli)");
         } catch (err) {
-            setError(err.response?.data?.message || "Link olusturulamadi");
+            setError(err.response?.data?.message || "Link oluşturulamadı");
         }
     };
 
@@ -193,7 +193,7 @@ function Dashboard() {
             const res = await searchFiles(searchQuery);
             setSearchResults(res.data);
         } catch (err) {
-            setError(err.response?.data?.message || "Arama basarisiz");
+            setError(err.response?.data?.message || "Arama başarısız");
         }
     };
 
@@ -228,7 +228,7 @@ function Dashboard() {
             setRenameDialogOpen(false);
             loadContents(currentFolderId);
         } catch (err) {
-            setError(err.response?.data?.message || "Yeniden adlandirilamadi");
+            setError(err.response?.data?.message || "Yeniden adlandırılamadı");
         }
     };
 
@@ -248,7 +248,7 @@ function Dashboard() {
             setMoveDialogOpen(false);
             loadContents(currentFolderId);
         } catch (err) {
-            setError(err.response?.data?.message || "Tasinamadi");
+            setError(err.response?.data?.message || "Taşınamadı");
         }
     };
 
@@ -257,7 +257,7 @@ function Dashboard() {
             await toggleStar(fileId);
             loadContents(currentFolderId);
         } catch (err) {
-            setError(err.response?.data?.message || "Islem basarisiz");
+            setError(err.response?.data?.message || "İşlem başarısız");
         }
         closeMenu();
     };
@@ -272,7 +272,7 @@ function Dashboard() {
         >
             <div className="dashboard-topbar">
                 <div>
-                    <Typography variant="h4" className="dashboard-title">Dosyalarim</Typography>
+                    <Typography variant="h4" className="dashboard-title">Dosyalarım</Typography>
                     {!searchResults && (
                         <Breadcrumbs className="breadcrumb-row">
                             {breadcrumb.map((crumb, index) => (
@@ -300,11 +300,11 @@ function Dashboard() {
                     <Menu anchorEl={newMenuAnchor} open={!!newMenuAnchor} onClose={() => setNewMenuAnchor(null)}>
                         <MenuItem onClick={() => { setNewFolderDialogOpen(true); setNewMenuAnchor(null); }}>
                             <ListItemIcon><CreateNewFolderIcon fontSize="small" /></ListItemIcon>
-                            Yeni Klasor
+                            Yeni Klasör
                         </MenuItem>
                         <MenuItem onClick={() => { document.getElementById("fileInput").click(); setNewMenuAnchor(null); }}>
                             <ListItemIcon><UploadFileIcon fontSize="small" /></ListItemIcon>
-                            Dosya Yukle
+                            Dosya Yükle
                         </MenuItem>
                     </Menu>
                     <input
@@ -317,11 +317,11 @@ function Dashboard() {
             </div>
 
             {error && <Alert severity="error" style={{ marginBottom: 16 }}>{error}</Alert>}
-            {loading && <Typography>Yukleniyor...</Typography>}
+            {loading && <Typography>Yükleniyor...</Typography>}
 
             {searchResults ? (
                 <>
-                    <Typography variant="h6">Arama Sonuclari</Typography>
+                    <Typography variant="h6">Arama Sonuçları</Typography>
                     <List>
                         {searchResults.map((file) => (
                             <ListItem
@@ -457,36 +457,36 @@ function Dashboard() {
             )}
 
             <Dialog open={newFolderDialogOpen} onClose={() => setNewFolderDialogOpen(false)}>
-                <DialogTitle>Yeni Klasor</DialogTitle>
+                <DialogTitle>Yeni Klasör</DialogTitle>
                 <DialogContent>
                     <TextField
                         autoFocus
                         fullWidth
-                        label="Klasor adi"
+                        label="Klasör adı"
                         value={newFolderName}
                         onChange={(e) => setNewFolderName(e.target.value)}
                         style={{ marginTop: 8 }}
                     />
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setNewFolderDialogOpen(false)}>Iptal</Button>
-                    <Button variant="contained" onClick={handleCreateFolder}>Olustur</Button>
+                    <Button onClick={() => setNewFolderDialogOpen(false)}>İptal</Button>
+                    <Button variant="contained" onClick={handleCreateFolder}>Oluştur</Button>
                 </DialogActions>
             </Dialog>
 
             <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)}>
-                <DialogTitle>Silmek istediginize emin misiniz?</DialogTitle>
+                <DialogTitle>Silmek istediğinize emin misiniz?</DialogTitle>
                 <DialogActions>
-                    <Button onClick={() => setDeleteTarget(null)}>Iptal</Button>
+                    <Button onClick={() => setDeleteTarget(null)}>İptal</Button>
                     <Button color="error" variant="contained" onClick={handleConfirmDelete}>Sil</Button>
                 </DialogActions>
             </Dialog>
 
             <Dialog open={!!shareTarget} onClose={() => setShareTarget(null)} fullWidth maxWidth="xs">
-                <DialogTitle>Dosyayi Paylas</DialogTitle>
+                <DialogTitle>Dosyayı Paylaş</DialogTitle>
                 <DialogContent>
                     <Typography variant="subtitle2" sx={{ mt: 1, mb: 1 }}>
-                        Kullanici ile paylas
+                        Kullanıcı ile paylaş
                     </Typography>
                     <TextField
                         autoFocus
@@ -503,13 +503,13 @@ function Dashboard() {
                         onClick={handleConfirmShare}
                         disabled={!shareEmail.trim()}
                     >
-                        Paylas
+                        Paylaş
                     </Button>
 
                     <Divider sx={{ my: 2 }} />
 
                     <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                        Link ile paylas
+                        Link ile paylaş
                     </Typography>
                     <Button
                         fullWidth
@@ -517,14 +517,14 @@ function Dashboard() {
                         startIcon={<LinkIcon />}
                         onClick={() => handleCreateLink(shareTarget)}
                     >
-                        Indirme linki olustur (24 saat gecerli)
+                        İndirme linki oluştur (24 saat geçerli)
                     </Button>
 
                     {currentShares.length > 0 && (
                         <>
                             <Divider sx={{ my: 2 }} />
                             <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                                Paylasilan kisiler
+                                Paylaşılan kişiler
                             </Typography>
                             <List dense>
                                 {currentShares.map((s) => (
@@ -552,7 +552,7 @@ function Dashboard() {
             </Dialog>
 
             <Dialog open={renameDialogOpen} onClose={() => setRenameDialogOpen(false)}>
-                <DialogTitle>Yeniden Adlandir</DialogTitle>
+                <DialogTitle>Yeniden Adlandır</DialogTitle>
                 <DialogContent>
                     <TextField
                         autoFocus
@@ -564,7 +564,7 @@ function Dashboard() {
                     />
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setRenameDialogOpen(false)}>Iptal</Button>
+                    <Button onClick={() => setRenameDialogOpen(false)}>İptal</Button>
                     <Button variant="contained" onClick={handleConfirmRename}>Kaydet</Button>
                 </DialogActions>
             </Dialog>
@@ -579,28 +579,28 @@ function Dashboard() {
                 {menuTarget?.type === "file" && (
                     <MenuItem onClick={() => { downloadFile(menuTarget.id, menuTarget.name); closeMenu(); }}>
                         <ListItemIcon><DownloadIcon fontSize="small" /></ListItemIcon>
-                        Indir
+                        İndir
                     </MenuItem>
                 )}
                 {menuTarget?.type === "file" && (
                     <MenuItem onClick={() => { setShareTarget(menuTarget.id); closeMenu(); }}>
                         <ListItemIcon><ShareIcon fontSize="small" /></ListItemIcon>
-                        Paylas
+                        Paylaş
                     </MenuItem>
                 )}
                 <MenuItem onClick={handleOpenRename}>
                     <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
-                    Yeniden Adlandir
+                    Yeniden Adlandır
                 </MenuItem>
                 <MenuItem onClick={handleOpenMove}>
                     <ListItemIcon><DriveFileMoveIcon fontSize="small" /></ListItemIcon>
-                    Tasi
+                    Taşı
                 </MenuItem>
                 <MenuItem onClick={() => handleToggleStar(menuTarget.id)}>
                     <ListItemIcon>
                         {menuTarget?.starred ? <StarIcon fontSize="small" sx={{ color: "#FFB400" }} /> : <StarBorderIcon fontSize="small" />}
                     </ListItemIcon>
-                    {menuTarget?.starred ? "Yildizi Kaldir" : "Yildizla"}
+                    {menuTarget?.starred ? "Yıldızı Kaldır" : "Yıldızla"}
                 </MenuItem>
                 <MenuItem onClick={() => { setDeleteTarget(menuTarget); closeMenu(); }}>
                     <ListItemIcon><DeleteIcon fontSize="small" /></ListItemIcon>

@@ -24,15 +24,15 @@ function Login() {
             await login(email, password);
             navigate("/dashboard");
         } catch (err) {
-            setError(err.response?.data?.message || "Giris basarisiz");
+            setError(err.response?.data?.message || "Giriş başarısız");
         }
     };
 
     return (
         <Paper elevation={3} className="auth-container">
-            <Typography variant="h5" className="auth-title">Giris Yap</Typography>
+            <Typography variant="h5" className="auth-title">Giriş Yap</Typography>
             {location.state?.registered && (
-                <Alert severity="success" sx={{ mb: 1 }}>Kayit basarili, simdi giris yapabilirsin.</Alert>
+                <Alert severity="success" sx={{ mb: 1 }}>Kayıt başarılı, şimdi giriş yapabilirsin.</Alert>
             )}
             <form onSubmit={handleSubmit} className="auth-form">
                 <TextField
@@ -43,17 +43,17 @@ function Login() {
                     fullWidth
                 />
                 <TextField
-                    label="Sifre"
+                    label="Şifre"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     fullWidth
                 />
                 {error && <Alert severity="error">{error}</Alert>}
-                <Button type="submit" variant="contained" fullWidth>Giris Yap</Button>
+                <Button type="submit" variant="contained" fullWidth>Giriş Yap</Button>
             </form>
             <Typography className="auth-footer">
-                Hesabin yok mu? <Link to="/register">Kayit Ol</Link>
+                Hesabın yok mu? <Link to="/register">Kayıt Ol</Link>
             </Typography>
         </Paper>
     );

@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ErrorResponse> handleMaxUploadSize(MaxUploadSizeExceededException ex) {
         ErrorResponse error = new ErrorResponse(HttpStatus.BAD_REQUEST.value(),
-                "Yuklenen dosya boyutu izin verilen maksimumu asiyor", LocalDateTime.now());
+                "Yüklenen dosya boyutu izin verilen maksimumu aşıyor", LocalDateTime.now());
         return ResponseEntity.badRequest().body(error);
     }
 
@@ -49,7 +49,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
         logger.error("Beklenmeyen hata: ", ex);
         ErrorResponse error = new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Beklenmeyen bir hata olustu", LocalDateTime.now());
+                "Beklenmeyen bir hata oluştu", LocalDateTime.now());
         return ResponseEntity.internalServerError().body(error);
     }
 }

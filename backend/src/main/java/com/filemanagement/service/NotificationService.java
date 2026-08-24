@@ -23,13 +23,13 @@ public class NotificationService {
 
     private User getUser(String username) {
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("Kullanici bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı"));
     }
 
     public void notifyFileShared(User recipient, String sharerUsername, String fileName) {
         Notification notification = new Notification();
         notification.setRecipient(recipient);
-        notification.setMessage(sharerUsername + " sizinle \"" + fileName + "\" dosyasini paylasti");
+        notification.setMessage(sharerUsername + " sizinle \"" + fileName + "\" dosyasını paylaştı");
         notificationRepository.save(notification);
     }
 

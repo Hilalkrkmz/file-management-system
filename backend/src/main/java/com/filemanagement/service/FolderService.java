@@ -30,7 +30,7 @@ public class FolderService {
 
     private User getUser(String username) {
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("Kullanici bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı"));
     }
 
     public FolderResponse createFolder(String username, FolderRequest request) {
@@ -39,10 +39,10 @@ public class FolderService {
         Folder parent = null;
         if (request.getParentFolderId() != null) {
             parent = folderRepository.findById(request.getParentFolderId())
-                    .orElseThrow(() -> new IllegalArgumentException("Ust klasor bulunamadi"));
+                    .orElseThrow(() -> new IllegalArgumentException("Üst klasör bulunamadı"));
 
             if (!parent.getOwner().getId().equals(owner.getId())) {
-                throw new IllegalArgumentException("Bu klasore erisim yetkiniz yok");
+                throw new IllegalArgumentException("Bu klasöre erişim yetkiniz yok");
             }
         }
 
@@ -50,7 +50,7 @@ public class FolderService {
                 .findByOwnerAndParentFolderAndNameAndIsDeletedFalse(owner, parent, request.getName())
                 .isPresent();
         if (exists) {
-            throw new IllegalArgumentException("Bu isimde bir klasor zaten var");
+            throw new IllegalArgumentException("Bu isimde bir klasör zaten var");
         }
 
         Folder folder = new Folder();
@@ -70,10 +70,10 @@ public class FolderService {
             folders = folderRepository.findByOwnerAndParentFolderIsNullAndIsDeletedFalse(owner);
         } else {
             Folder parent = folderRepository.findById(parentFolderId)
-                    .orElseThrow(() -> new IllegalArgumentException("Klasor bulunamadi"));
+                    .orElseThrow(() -> new IllegalArgumentException("Klasör bulunamadı"));
 
             if (!parent.getOwner().getId().equals(owner.getId())) {
-                throw new IllegalArgumentException("Bu klasore erisim yetkiniz yok");
+                throw new IllegalArgumentException("Bu klasöre erişim yetkiniz yok");
             }
 
             folders = folderRepository.findByOwnerAndParentFolderAndIsDeletedFalse(owner, parent);
@@ -86,10 +86,10 @@ public class FolderService {
         User owner = getUser(username);
 
         Folder folder = folderRepository.findById(folderId)
-                .orElseThrow(() -> new IllegalArgumentException("Klasor bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Klasör bulunamadı"));
 
         if (!folder.getOwner().getId().equals(owner.getId())) {
-            throw new IllegalArgumentException("Bu klasoru silme yetkiniz yok");
+            throw new IllegalArgumentException("Bu klasörü silme yetkiniz yok");
         }
 
         softDeleteRecursive(folder);
@@ -130,10 +130,10 @@ public class FolderService {
     public void restoreFolder(String username, UUID folderId) {
         User owner = getUser(username);
         Folder folder = folderRepository.findById(folderId)
-                .orElseThrow(() -> new IllegalArgumentException("Klasor bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Klasör bulunamadı"));
 
         if (!folder.getOwner().getId().equals(owner.getId())) {
-            throw new IllegalArgumentException("Bu klasoru geri yukleme yetkiniz yok");
+            throw new IllegalArgumentException("Bu klasörü geri yükleme yetkiniz yok");
         }
 
         folder.setDeleted(false);
@@ -144,10 +144,10 @@ public class FolderService {
     public FolderResponse renameFolder(String username, UUID folderId, String newName) {
         User owner = getUser(username);
         Folder folder = folderRepository.findById(folderId)
-                .orElseThrow(() -> new IllegalArgumentException("Klasor bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Klasör bulunamadı"));
 
         if (!folder.getOwner().getId().equals(owner.getId())) {
-            throw new IllegalArgumentException("Bu klasoru yeniden adlandirma yetkiniz yok");
+            throw new IllegalArgumentException("Bu klasörü yeniden adlandırma yetkiniz yok");
         }
 
         folder.setName(newName);
@@ -159,18 +159,18 @@ public class FolderService {
         User owner = getUser(username);
 
         Folder folder = folderRepository.findById(folderId)
-                .orElseThrow(() -> new IllegalArgumentException("Klasor bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Klasör bulunamadı"));
         if (!folder.getOwner().getId().equals(owner.getId())) {
-            throw new IllegalArgumentException("Bu klasoru tasima yetkiniz yok");
+            throw new IllegalArgumentException("Bu klasörü taşıma yetkiniz yok");
         }
 
         Folder target = folderRepository.findById(targetFolderId)
-                .orElseThrow(() -> new IllegalArgumentException("Hedef klasor bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Hedef klasör bulunamadı"));
         if (!target.getOwner().getId().equals(owner.getId())) {
-            throw new IllegalArgumentException("Hedef klasore erisim yetkiniz yok");
+            throw new IllegalArgumentException("Hedef klasöre erişim yetkiniz yok");
         }
         if (target.getId().equals(folder.getId())) {
-            throw new IllegalArgumentException("Bir klasor kendi icine tasinamaz");
+            throw new IllegalArgumentException("Bir klasör kendi içine taşınamaz");
         }
 
         folder.setParentFolder(target);
@@ -181,10 +181,10 @@ public class FolderService {
     public void permanentlyDeleteFolder(String username, UUID folderId) {
         User owner = getUser(username);
         Folder folder = folderRepository.findById(folderId)
-                .orElseThrow(() -> new IllegalArgumentException("Klasor bulunamadi"));
+                .orElseThrow(() -> new IllegalArgumentException("Klasör bulunamadı"));
 
         if (!folder.getOwner().getId().equals(owner.getId())) {
-            throw new IllegalArgumentException("Bu klasoru silme yetkiniz yok");
+            throw new IllegalArgumentException("Bu klasörü silme yetkiniz yok");
         }
 
         folderRepository.delete(folder);
