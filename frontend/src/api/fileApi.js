@@ -6,7 +6,7 @@ export const getFiles = (folderId) => {
 
 export const uploadFile = (folderId, file) => {
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", file, file.name);
     return axiosInstance.post("/files", formData, {
         params: { folderId },
         headers: { "Content-Type": "multipart/form-data" },

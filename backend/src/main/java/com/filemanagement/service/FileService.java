@@ -87,7 +87,13 @@ public class FileService {
         }
 
         String originalName = multipartFile.getOriginalFilename();
-        if (originalName == null || !originalName.contains(".")) {
+        if (originalName != null) {
+            int lastSeparator = Math.max(originalName.lastIndexOf('/'), originalName.lastIndexOf('\\'));
+            if (lastSeparator != -1) {
+                originalName = originalName.substring(lastSeparator + 1);
+            }
+        }
+        if (originalName == null || originalName.isBlank() || !originalName.contains(".")) {
             throw new IllegalArgumentException("Geçersiz dosya adı");
         }
 
