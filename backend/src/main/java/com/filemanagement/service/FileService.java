@@ -7,6 +7,7 @@ import com.filemanagement.entity.User;
 import com.filemanagement.repository.FileRepository;
 import com.filemanagement.repository.FileShareRepository;
 import com.filemanagement.repository.FolderRepository;
+import com.filemanagement.repository.ShareLinkRepository;
 import com.filemanagement.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ public class FileService {
     private final UserRepository userRepository;
     private final FileStorageService storageService;
     private final FileShareRepository fileShareRepository;
+    private final ShareLinkRepository shareLinkRepository;
 
     @Value("${app.storage.max-file-size-mb}")
     private long maxFileSizeMb;
@@ -49,12 +51,14 @@ public class FileService {
     );
 
     public FileService(FileRepository fileRepository, FolderRepository folderRepository,
-                       UserRepository userRepository, FileStorageService storageService,FileShareRepository fileShareRepository) {
+                       UserRepository userRepository, FileStorageService storageService,FileShareRepository fileShareRepository,
+                       ShareLinkRepository shareLinkRepository) {
         this.fileRepository = fileRepository;
         this.folderRepository = folderRepository;
         this.userRepository = userRepository;
         this.storageService = storageService;
         this.fileShareRepository = fileShareRepository;
+        this.shareLinkRepository = shareLinkRepository;
     }
 
     private User getUser(String username) {
@@ -316,6 +320,12 @@ public class FileService {
             throw new IllegalArgumentException("Bu dosyayı silme yetkiniz yok");
         }
 
+        purgeFile(file);
+    }
+
+    public void purgeFile(com.filemanagement.entity.File file) {
+        fileShareRepository.deleteAll(fileShareRepository.findByFile(file));
+        shareLinkRepository.deleteAll(shareLinkRepository.findByFile(file));
         storageService.delete(file.getStoragePath());
         fileRepository.delete(file);
     }

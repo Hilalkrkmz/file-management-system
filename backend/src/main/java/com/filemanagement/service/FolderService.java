@@ -20,12 +20,14 @@ public class FolderService {
     private final FolderRepository folderRepository;
     private final UserRepository userRepository;
     private final FileRepository fileRepository;
+    private final FileService fileService;
 
     public FolderService(FolderRepository folderRepository, UserRepository userRepository,
-                         FileRepository fileRepository) {
+                         FileRepository fileRepository, FileService fileService) {
         this.folderRepository = folderRepository;
         this.userRepository = userRepository;
         this.fileRepository = fileRepository;
+        this.fileService = fileService;
     }
 
     private User getUser(String username) {
@@ -186,6 +188,14 @@ public class FolderService {
         if (!folder.getOwner().getId().equals(owner.getId())) {
             throw new IllegalArgumentException("Bu klasörü silme yetkiniz yok");
         }
+
+        permanentlyDeleteRecursive(folder);
+    }
+
+    private void permanentlyDeleteRecursive(Folder folder) {
+        fileRepository.findByFolder(folder).forEach(fileService::purgeFile);
+
+        folderRepository.findByParentFolder(folder).forEach(this::permanentlyDeleteRecursive);
 
         folderRepository.delete(folder);
     }

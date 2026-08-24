@@ -12,6 +12,8 @@ public interface FolderRepository extends JpaRepository<Folder, UUID> {
 
     List<Folder> findByOwnerAndParentFolderAndIsDeletedFalse(User owner, Folder parentFolder);
 
+    List<Folder> findByParentFolder(Folder parentFolder);
+
     List<Folder> findByOwnerAndParentFolderIsNullAndIsDeletedFalse(User owner);
 
     Optional<Folder> findByOwnerAndParentFolderAndNameAndIsDeletedFalse(User owner, Folder parentFolder, String name);
