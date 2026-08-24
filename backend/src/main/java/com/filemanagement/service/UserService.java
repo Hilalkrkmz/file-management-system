@@ -1,5 +1,6 @@
 package com.filemanagement.service;
 
+import com.filemanagement.dto.AuthResponse;
 import com.filemanagement.dto.UserProfileResponse;
 import com.filemanagement.entity.User;
 import com.filemanagement.repository.FileAccessRepository;
@@ -7,6 +8,7 @@ import com.filemanagement.repository.FileShareRepository;
 import com.filemanagement.repository.FolderShareRepository;
 import com.filemanagement.repository.NotificationRepository;
 import com.filemanagement.repository.UserRepository;
+import com.filemanagement.security.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,11 +26,13 @@ public class UserService {
     private final FolderShareRepository folderShareRepository;
     private final NotificationRepository notificationRepository;
     private final FileAccessRepository fileAccessRepository;
+    private final JwtUtil jwtUtil;
 
     public UserService(UserRepository userRepository, FileStorageService storageService,
                        PasswordEncoder passwordEncoder, FolderService folderService,
                        FileShareRepository fileShareRepository, FolderShareRepository folderShareRepository,
-                       NotificationRepository notificationRepository, FileAccessRepository fileAccessRepository) {
+                       NotificationRepository notificationRepository, FileAccessRepository fileAccessRepository,
+                       JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.storageService = storageService;
         this.passwordEncoder = passwordEncoder;
@@ -37,6 +41,7 @@ public class UserService {
         this.folderShareRepository = folderShareRepository;
         this.notificationRepository = notificationRepository;
         this.fileAccessRepository = fileAccessRepository;
+        this.jwtUtil = jwtUtil;
     }
 
     private User getUser(String username) {
@@ -102,6 +107,24 @@ public class UserService {
 
         user.setEmail(newEmail);
         userRepository.save(user);
+    }
+
+    public AuthResponse changeUsername(String username, String newUsername, String currentPassword) {
+        User user = getUser(username);
+
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw new IllegalArgumentException("Şifre yanlış");
+        }
+
+        if (!newUsername.equalsIgnoreCase(user.getUsername()) && userRepository.existsByUsername(newUsername)) {
+            throw new IllegalArgumentException("Bu kullanıcı adı zaten kullanılıyor");
+        }
+
+        user.setUsername(newUsername);
+        userRepository.save(user);
+
+        String token = jwtUtil.generateToken(user.getUsername(), user.getRole().name());
+        return new AuthResponse(token, user.getUsername(), user.getRole().name());
     }
 
     public void deleteOwnAccount(String username, String currentPassword) {

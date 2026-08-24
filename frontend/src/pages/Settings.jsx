@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import { getMyProfile, uploadProfilePhoto, changePassword, changeEmail, deleteAccount } from "../api/userApi";
+import { getMyProfile, uploadProfilePhoto, changePassword, changeEmail, changeUsername, deleteAccount } from "../api/userApi";
 import axiosInstance from "../api/axiosInstance";
 import Layout from "../components/Layout.jsx";
 import Typography from "@mui/material/Typography";
@@ -15,6 +15,7 @@ import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import Divider from "@mui/material/Divider";
 import LockIcon from "@mui/icons-material/Lock";
 import EmailIcon from "@mui/icons-material/Email";
+import PersonIcon from "@mui/icons-material/Person";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import TextField from "@mui/material/TextField";
 import Collapse from "@mui/material/Collapse";
@@ -26,7 +27,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 
 function Settings() {
-    const { user, logout } = useAuth();
+    const { user, logout, updateSession } = useAuth();
     const navigate = useNavigate();
     const [profile, setProfile] = useState(null);
     const [photoUrl, setPhotoUrl] = useState(null);
@@ -39,6 +40,10 @@ function Settings() {
     const [newEmail, setNewEmail] = useState("");
     const [emailPassword, setEmailPassword] = useState("");
     const [emailSectionOpen, setEmailSectionOpen] = useState(false);
+
+    const [newUsername, setNewUsername] = useState("");
+    const [usernamePassword, setUsernamePassword] = useState("");
+    const [usernameSectionOpen, setUsernameSectionOpen] = useState(false);
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [deletePassword, setDeletePassword] = useState("");
@@ -105,6 +110,22 @@ function Settings() {
             loadProfile();
         } catch (err) {
             setError(err.response?.data?.message || "Email değiştirilemedi");
+        }
+    };
+
+    const handleChangeUsername = async () => {
+        setError("");
+        setSuccess("");
+        try {
+            const res = await changeUsername(newUsername, usernamePassword);
+            updateSession(res.data);
+            setSuccess("Kullanıcı adı başarıyla değiştirildi");
+            setNewUsername("");
+            setUsernamePassword("");
+            setUsernameSectionOpen(false);
+            loadProfile();
+        } catch (err) {
+            setError(err.response?.data?.message || "Kullanıcı adı değiştirilemedi");
         }
     };
 
@@ -247,6 +268,42 @@ function Settings() {
                         sx={{ mb: 3 }}
                     >
                         Emaili Güncelle
+                    </Button>
+                </Collapse>
+
+                <Button
+                    onClick={() => setUsernameSectionOpen((open) => !open)}
+                    endIcon={usernameSectionOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    sx={{ mb: 1 }}
+                >
+                    Kullanıcı Adını Değiştir
+                </Button>
+                <Collapse in={usernameSectionOpen}>
+                    <TextField
+                        fullWidth
+                        size="small"
+                        label="Yeni kullanıcı adı"
+                        value={newUsername}
+                        onChange={(e) => setNewUsername(e.target.value)}
+                        sx={{ mb: 1 }}
+                    />
+                    <TextField
+                        fullWidth
+                        size="small"
+                        type="password"
+                        label="Mevcut şifre"
+                        value={usernamePassword}
+                        onChange={(e) => setUsernamePassword(e.target.value)}
+                        sx={{ mb: 1 }}
+                    />
+                    <Button
+                        variant="outlined"
+                        startIcon={<PersonIcon />}
+                        onClick={handleChangeUsername}
+                        disabled={!newUsername.trim() || !usernamePassword}
+                        sx={{ mb: 3 }}
+                    >
+                        Kullanıcı Adını Güncelle
                     </Button>
                 </Collapse>
 

@@ -21,5 +21,8 @@ export const changePassword = (currentPassword, newPassword) =>
 export const changeEmail = (newEmail, currentPassword) =>
     axiosInstance.put("/users/me/email", { newEmail, currentPassword });
 
+export const changeUsername = (newUsername, currentPassword) =>
+    axiosInstance.put("/users/me/username", { newUsername, currentPassword });
+
 export const deleteAccount = (currentPassword) =>
     axiosInstance.delete("/users/me", { data: { currentPassword } });

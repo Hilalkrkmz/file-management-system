@@ -22,6 +22,12 @@ export function AuthProvider({ children }) {
     await axiosInstance.post("/auth/register", { username, email, password });
 };
 
+    const updateSession = ({ token, username: returnedUsername, role }) => {
+        localStorage.setItem("token", token);
+        localStorage.setItem("user", JSON.stringify({ username: returnedUsername, role }));
+        setUser({ username: returnedUsername, role });
+    };
+
     const logout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
@@ -29,7 +35,7 @@ export function AuthProvider({ children }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, register, logout }}>
+        <AuthContext.Provider value={{ user, login, register, logout, updateSession }}>
             {children}
         </AuthContext.Provider>
     );
