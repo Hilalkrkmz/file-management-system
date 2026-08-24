@@ -43,7 +43,6 @@ public class File {
     private boolean isDeleted = false;
 
     private LocalDateTime deletedAt;
-    private LocalDateTime lastAccessedAt;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime uploadedAt;

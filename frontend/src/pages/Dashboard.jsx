@@ -71,7 +71,6 @@ function Dashboard() {
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [shareTarget, setShareTarget] = useState(null);
     const [shareEmail, setShareEmail] = useState("");
-    const [sharePermission, setSharePermission] = useState("VIEW");
     const [currentShares, setCurrentShares] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState(null);
@@ -221,11 +220,11 @@ function Dashboard() {
         if (!shareEmail.trim() || !shareTarget) return;
         try {
             if (shareTarget.type === "folder") {
-                await shareFolderWithUser(shareTarget.id, shareEmail, sharePermission);
+                await shareFolderWithUser(shareTarget.id, shareEmail, "DOWNLOAD");
                 const res = await getSharesForFolder(shareTarget.id);
                 setCurrentShares(res.data);
             } else {
-                await shareWithUser(shareTarget.id, shareEmail, sharePermission);
+                await shareWithUser(shareTarget.id, shareEmail, "DOWNLOAD");
                 const res = await getSharesForFile(shareTarget.id);
                 setCurrentShares(res.data);
             }
@@ -593,17 +592,6 @@ function Dashboard() {
                         onChange={(e) => setShareEmail(e.target.value)}
                         sx={{ mb: 1 }}
                     />
-                    <TextField
-                        select
-                        fullWidth
-                        size="small"
-                        label="İzin"
-                        value={sharePermission}
-                        onChange={(e) => setSharePermission(e.target.value)}
-                    >
-                        <MenuItem value="VIEW">Görüntüleme</MenuItem>
-                        <MenuItem value="DOWNLOAD">İndirme</MenuItem>
-                    </TextField>
                     <Button
                         fullWidth
                         variant="contained"
@@ -651,7 +639,7 @@ function Dashboard() {
                                         <Avatar sx={{ width: 28, height: 28, mr: 1, fontSize: 14 }}>
                                             {s.sharedWithUsername?.[0]?.toUpperCase()}
                                         </Avatar>
-                                        <ListItemText primary={s.sharedWithUsername} secondary={s.permission} />
+                                        <ListItemText primary={s.sharedWithUsername} />
                                     </ListItem>
                                 ))}
                             </List>

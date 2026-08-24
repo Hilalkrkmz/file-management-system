@@ -4,6 +4,8 @@ import com.filemanagement.dto.FileResponse;
 import com.filemanagement.dto.StorageInfoResponse;
 import com.filemanagement.entity.Folder;
 import com.filemanagement.entity.User;
+import com.filemanagement.entity.FileAccess;
+import com.filemanagement.repository.FileAccessRepository;
 import com.filemanagement.repository.FileRepository;
 import com.filemanagement.repository.FileShareRepository;
 import com.filemanagement.repository.FolderRepository;
@@ -31,6 +33,7 @@ public class FileService {
     private final FileShareRepository fileShareRepository;
     private final ShareLinkRepository shareLinkRepository;
     private final FolderAccessService folderAccessService;
+    private final FileAccessRepository fileAccessRepository;
 
     @Value("${app.storage.max-file-size-mb}")
     private long maxFileSizeMb;
@@ -53,7 +56,8 @@ public class FileService {
 
     public FileService(FileRepository fileRepository, FolderRepository folderRepository,
                        UserRepository userRepository, FileStorageService storageService,FileShareRepository fileShareRepository,
-                       ShareLinkRepository shareLinkRepository, FolderAccessService folderAccessService) {
+                       ShareLinkRepository shareLinkRepository, FolderAccessService folderAccessService,
+                       FileAccessRepository fileAccessRepository) {
         this.fileRepository = fileRepository;
         this.folderRepository = folderRepository;
         this.userRepository = userRepository;
@@ -61,6 +65,7 @@ public class FileService {
         this.fileShareRepository = fileShareRepository;
         this.shareLinkRepository = shareLinkRepository;
         this.folderAccessService = folderAccessService;
+        this.fileAccessRepository = fileAccessRepository;
     }
 
     private User getUser(String username) {
@@ -191,9 +196,19 @@ public class FileService {
     public byte[] downloadFile(String username, UUID fileId) {
         User user = getUser(username);
         com.filemanagement.entity.File file = getOwnedOrSharedFile(user, fileId);
-        file.setLastAccessedAt(LocalDateTime.now());
-        fileRepository.save(file);
+        recordAccess(user, file);
         return storageService.load(file.getStoragePath());
+    }
+
+    private void recordAccess(User user, com.filemanagement.entity.File file) {
+        FileAccess access = fileAccessRepository.findByUserAndFile(user, file).orElseGet(() -> {
+            FileAccess a = new FileAccess();
+            a.setUser(user);
+            a.setFile(file);
+            return a;
+        });
+        access.setAccessedAt(LocalDateTime.now());
+        fileAccessRepository.save(access);
     }
 
     public com.filemanagement.entity.File getFileEntity(String username, UUID fileId) {
@@ -256,6 +271,10 @@ public class FileService {
     }
 
     private FileResponse toResponse(com.filemanagement.entity.File file) {
+        return toResponse(file, null);
+    }
+
+    private FileResponse toResponse(com.filemanagement.entity.File file, LocalDateTime accessedAt) {
         Folder folder = file.getFolder();
         return new FileResponse(
                 file.getId(),
@@ -265,7 +284,7 @@ public class FileService {
                 folder != null ? folder.getId() : null,
                 folder != null ? folder.getName() : "Ana Dizin",
                 file.getUploadedAt(),
-                file.getLastAccessedAt(),
+                accessedAt,
                 file.isStarred()
         );
     }
@@ -335,16 +354,17 @@ public class FileService {
     public void purgeFile(com.filemanagement.entity.File file) {
         fileShareRepository.deleteAll(fileShareRepository.findByFile(file));
         shareLinkRepository.deleteAll(shareLinkRepository.findByFile(file));
+        fileAccessRepository.deleteAll(fileAccessRepository.findByFile(file));
         storageService.delete(file.getStoragePath());
         fileRepository.delete(file);
     }
 
     public List<FileResponse> listRecent(String username) {
-        User owner = getUser(username);
-        return fileRepository.findTop10ByOwnerAndIsDeletedFalseOrderByLastAccessedAtDesc(owner)
-                .stream()
-                .filter(f -> f.getLastAccessedAt() != null)
-                .map(this::toResponse)
+        User user = getUser(username);
+        return fileAccessRepository.findByUserOrderByAccessedAtDesc(user).stream()
+                .filter(a -> !a.getFile().isDeleted())
+                .limit(10)
+                .map(a -> toResponse(a.getFile(), a.getAccessedAt()))
                 .collect(Collectors.toList());
     }
 

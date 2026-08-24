@@ -50,7 +50,7 @@ function SharedWithMe() {
                                 <ListItemIcon><FolderIcon color="primary" /></ListItemIcon>
                                 <ListItemText
                                     primary={s.folderName}
-                                    secondary={`Paylaşan: ${s.sharedByUsername} (${s.permission})`}
+                                    secondary={`Paylaşan: ${s.sharedByUsername}`}
                                 />
                             </ListItemButton>
                         ))}
@@ -74,7 +74,7 @@ function SharedWithMe() {
                         <span style={{ marginRight: 8, display: "flex" }}>{getFileIcon(s.fileName?.split(".").pop())}</span>
                         <ListItemText
                             primary={s.fileName}
-                            secondary={`Paylaşan: ${s.sharedByUsername} (${s.permission})`}
+                            secondary={`Paylaşan: ${s.sharedByUsername}`}
                         />
                     </ListItem>
                 ))}

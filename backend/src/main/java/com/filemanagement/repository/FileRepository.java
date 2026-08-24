@@ -29,8 +29,6 @@ public interface FileRepository extends JpaRepository<File, UUID> {
 
     List<File> findByOwnerAndIsDeletedTrue(User owner);
 
-    List<File> findTop10ByOwnerAndIsDeletedFalseOrderByLastAccessedAtDesc(User owner);
-
     @Query("SELECT COALESCE(SUM(f.size), 0) FROM File f WHERE f.owner = :owner AND f.isDeleted = false")
     long sumSizeByOwner(@Param("owner") User owner);
 
