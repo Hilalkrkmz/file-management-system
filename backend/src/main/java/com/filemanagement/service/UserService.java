@@ -2,6 +2,10 @@ package com.filemanagement.service;
 
 import com.filemanagement.dto.UserProfileResponse;
 import com.filemanagement.entity.User;
+import com.filemanagement.repository.FileAccessRepository;
+import com.filemanagement.repository.FileShareRepository;
+import com.filemanagement.repository.FolderShareRepository;
+import com.filemanagement.repository.NotificationRepository;
 import com.filemanagement.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,12 +19,24 @@ public class UserService {
     private final UserRepository userRepository;
     private final FileStorageService storageService;
     private final PasswordEncoder passwordEncoder;
+    private final FolderService folderService;
+    private final FileShareRepository fileShareRepository;
+    private final FolderShareRepository folderShareRepository;
+    private final NotificationRepository notificationRepository;
+    private final FileAccessRepository fileAccessRepository;
 
     public UserService(UserRepository userRepository, FileStorageService storageService,
-                       PasswordEncoder passwordEncoder) {
+                       PasswordEncoder passwordEncoder, FolderService folderService,
+                       FileShareRepository fileShareRepository, FolderShareRepository folderShareRepository,
+                       NotificationRepository notificationRepository, FileAccessRepository fileAccessRepository) {
         this.userRepository = userRepository;
         this.storageService = storageService;
         this.passwordEncoder = passwordEncoder;
+        this.folderService = folderService;
+        this.fileShareRepository = fileShareRepository;
+        this.folderShareRepository = folderShareRepository;
+        this.notificationRepository = notificationRepository;
+        this.fileAccessRepository = fileAccessRepository;
     }
 
     private User getUser(String username) {
@@ -71,5 +87,41 @@ public class UserService {
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+    }
+
+    public void changeEmail(String username, String newEmail, String currentPassword) {
+        User user = getUser(username);
+
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw new IllegalArgumentException("Şifre yanlış");
+        }
+
+        if (!newEmail.equalsIgnoreCase(user.getEmail()) && userRepository.existsByEmail(newEmail)) {
+            throw new IllegalArgumentException("Bu email zaten kullanılıyor");
+        }
+
+        user.setEmail(newEmail);
+        userRepository.save(user);
+    }
+
+    public void deleteOwnAccount(String username, String currentPassword) {
+        User user = getUser(username);
+
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw new IllegalArgumentException("Şifre yanlış");
+        }
+
+        fileShareRepository.deleteAll(fileShareRepository.findBySharedWith(user));
+        folderShareRepository.deleteAll(folderShareRepository.findBySharedWith(user));
+        notificationRepository.deleteAll(notificationRepository.findByRecipientOrderByCreatedAtDesc(user));
+        fileAccessRepository.deleteAll(fileAccessRepository.findByUserOrderByAccessedAtDesc(user));
+
+        folderService.purgeAllForOwner(user);
+
+        if (user.getProfilePhotoPath() != null) {
+            storageService.delete(user.getProfilePhotoPath());
+        }
+
+        userRepository.delete(user);
     }
 }

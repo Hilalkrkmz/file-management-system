@@ -1,6 +1,8 @@
 package com.filemanagement.controller;
 
+import com.filemanagement.dto.ChangeEmailRequest;
 import com.filemanagement.dto.ChangePasswordRequest;
+import com.filemanagement.dto.DeleteAccountRequest;
 import com.filemanagement.dto.UserProfileResponse;
 import com.filemanagement.service.UserService;
 import jakarta.validation.Valid;
@@ -46,5 +48,19 @@ public class UserController {
                                                Authentication authentication) {
         userService.changePassword(authentication.getName(), request.getCurrentPassword(), request.getNewPassword());
         return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/me/email")
+    public ResponseEntity<Void> changeEmail(@Valid @RequestBody ChangeEmailRequest request,
+                                            Authentication authentication) {
+        userService.changeEmail(authentication.getName(), request.getNewEmail(), request.getCurrentPassword());
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteAccount(@Valid @RequestBody DeleteAccountRequest request,
+                                              Authentication authentication) {
+        userService.deleteOwnAccount(authentication.getName(), request.getCurrentPassword());
+        return ResponseEntity.noContent().build();
     }
 }

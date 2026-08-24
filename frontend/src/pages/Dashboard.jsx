@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { getFolders, createFolder, deleteFolder, renameFolder, moveFolder } from "../api/folderApi";
-import { getFiles, uploadFile, downloadFile, deleteFile, searchFiles, renameFile, moveFile } from "../api/fileApi";
+import { getFiles, uploadFile, downloadFile, deleteFile, renameFile, moveFile } from "../api/fileApi";
+import { search as searchApi } from "../api/searchApi";
 import { shareWithUser, createShareLink, getSharesForFile, removeShare, shareFolderWithUser, getSharesForFolder, removeFolderShare } from "../api/shareApi";
 import { getFileIcon } from "../utils/fileIcons.jsx";
 import Layout from "../components/Layout.jsx";
@@ -29,6 +30,8 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Snackbar from "@mui/material/Snackbar";
 import Avatar from "@mui/material/Avatar";
+import Checkbox from "@mui/material/Checkbox";
+import Paper from "@mui/material/Paper";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import FolderIcon from "@mui/icons-material/Folder";
@@ -48,12 +51,14 @@ import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 import "../styles/Dashboard.css";
 
 function Dashboard() {
     const { sharedFolderId } = useParams();
     const location = useLocation();
+    const navigate = useNavigate();
     const isReadOnly = !!sharedFolderId;
 
     const [currentFolderId, setCurrentFolderId] = useState(() => sharedFolderId ?? null);
@@ -84,6 +89,13 @@ function Dashboard() {
     const [moveDialogOpen, setMoveDialogOpen] = useState(false);
     const [newMenuAnchor, setNewMenuAnchor] = useState(null);
 
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragCounter, setDragCounter] = useState(0);
+
+    const [selectedIds, setSelectedIds] = useState(new Set());
+    const [bulkMoveDialogOpen, setBulkMoveDialogOpen] = useState(false);
+    const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
+
     const loadContents = async (folderId) => {
         setLoading(true);
         setError("");
@@ -102,6 +114,7 @@ function Dashboard() {
 
     useEffect(() => {
         loadContents(currentFolderId);
+        setSelectedIds(new Set());
     }, [currentFolderId]);
 
     useEffect(() => {
@@ -151,29 +164,12 @@ function Dashboard() {
         }
     };
 
-    const handleFileUpload = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        try {
-            await uploadFile(currentFolderId, file);
-            loadContents(currentFolderId);
-        } catch (err) {
-            setError(err.response?.data?.message || "Dosya yüklenemedi");
-        }
-        e.target.value = "";
-    };
-
     const JUNK_FILE_NAMES = new Set(["desktop.ini", "thumbs.db", ".ds_store"]);
     const isJunkFile = (name) =>
         JUNK_FILE_NAMES.has(name.toLowerCase()) || name.startsWith(".") || name.startsWith("~$");
 
-    const handleFolderUpload = async (e) => {
-        const fileList = Array.from(e.target.files).filter((file) => !isJunkFile(file.name));
-        if (fileList.length === 0) {
-            e.target.value = "";
-            return;
-        }
-
+    const uploadEntries = async (entries) => {
+        if (entries.length === 0) return;
         setLoading(true);
         setError("");
         const failedFiles = [];
@@ -191,8 +187,7 @@ function Dashboard() {
                 return res.data.id;
             };
 
-            for (const file of fileList) {
-                const relativePath = file.webkitRelativePath || file.name;
+            for (const { file, relativePath } of entries) {
                 const lastSlash = relativePath.lastIndexOf("/");
                 const dirPath = lastSlash === -1 ? "" : relativePath.substring(0, lastSlash);
                 try {
@@ -209,11 +204,96 @@ function Dashboard() {
                 setError(`${failedFiles.length} dosya yüklenemedi: ${failedFiles.join(", ")}`);
             }
         } catch (err) {
-            setError(err.response?.data?.message || "Klasör yüklenemedi");
+            setError(err.response?.data?.message || "Yükleme başarısız");
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleFileUpload = async (e) => {
+        const fileList = Array.from(e.target.files).filter((file) => !isJunkFile(file.name));
+        await uploadEntries(fileList.map((file) => ({ file, relativePath: file.name })));
         e.target.value = "";
+    };
+
+    const handleFolderUpload = async (e) => {
+        const fileList = Array.from(e.target.files).filter((file) => !isJunkFile(file.name));
+        await uploadEntries(fileList.map((file) => ({ file, relativePath: file.webkitRelativePath || file.name })));
+        e.target.value = "";
+    };
+
+    const traverseFileTreeEntry = (entry, basePath, collected) => {
+        return new Promise((resolve) => {
+            if (entry.isFile) {
+                entry.file((file) => {
+                    if (!isJunkFile(file.name)) {
+                        collected.push({ file, relativePath: basePath + file.name });
+                    }
+                    resolve();
+                }, () => resolve());
+            } else if (entry.isDirectory) {
+                const dirReader = entry.createReader();
+                const readBatch = () => {
+                    dirReader.readEntries(async (children) => {
+                        if (children.length === 0) {
+                            resolve();
+                            return;
+                        }
+                        for (const child of children) {
+                            await traverseFileTreeEntry(child, basePath + entry.name + "/", collected);
+                        }
+                        readBatch();
+                    }, () => resolve());
+                };
+                readBatch();
+            } else {
+                resolve();
+            }
+        });
+    };
+
+    const handleDragEnter = (e) => {
+        e.preventDefault();
+        if (isReadOnly) return;
+        setDragCounter((c) => c + 1);
+        setIsDragging(true);
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        if (isReadOnly) return;
+        setDragCounter((c) => {
+            const next = c - 1;
+            if (next <= 0) setIsDragging(false);
+            return next;
+        });
+    };
+
+    const handleDrop = async (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        setDragCounter(0);
+        if (isReadOnly) return;
+
+        const items = e.dataTransfer.items;
+        if (!items || items.length === 0) return;
+
+        const entries = [];
+        for (let i = 0; i < items.length; i++) {
+            const entry = items[i].webkitGetAsEntry?.();
+            if (entry) entries.push(entry);
+        }
+
+        const collected = [];
+        for (const entry of entries) {
+            await traverseFileTreeEntry(entry, "", collected);
+        }
+
+        await uploadEntries(collected);
     };
 
     const handleConfirmShare = async () => {
@@ -264,7 +344,7 @@ function Dashboard() {
             return;
         }
         try {
-            const res = await searchFiles(searchQuery);
+            const res = await searchApi(searchQuery);
             setSearchResults(res.data);
         } catch (err) {
             setError(err.response?.data?.message || "Arama başarısız");
@@ -274,6 +354,19 @@ function Dashboard() {
     const handleClearSearch = () => {
         setSearchQuery("");
         setSearchResults(null);
+    };
+
+    const handleSearchOwnFolderClick = (folder) => {
+        setSearchQuery("");
+        setSearchResults(null);
+        setCurrentFolderId(folder.id);
+        setBreadcrumb([{ id: null, name: "Ana Dizin" }, { id: folder.id, name: folder.name }]);
+    };
+
+    const handleSearchSharedFolderClick = (sharedFolder) => {
+        navigate(`/dashboard/shared/${sharedFolder.folderId}`, {
+            state: { folderName: sharedFolder.folderName },
+        });
     };
 
     const openMenu = (e, target) => {
@@ -336,6 +429,57 @@ function Dashboard() {
         closeMenu();
     };
 
+    const selectionKey = (type, id) => `${type}:${id}`;
+
+    const toggleSelect = (type, id) => {
+        setSelectedIds((prev) => {
+            const next = new Set(prev);
+            const key = selectionKey(type, id);
+            if (next.has(key)) next.delete(key);
+            else next.add(key);
+            return next;
+        });
+    };
+
+    const clearSelection = () => setSelectedIds(new Set());
+
+    const handleBulkDelete = async () => {
+        for (const key of selectedIds) {
+            const [type, id] = key.split(":");
+            try {
+                if (type === "folder") {
+                    await deleteFolder(id);
+                } else {
+                    await deleteFile(id);
+                }
+            } catch (err) {
+                // continue deleting remaining items even if one fails
+            }
+        }
+        setBulkDeleteConfirmOpen(false);
+        clearSelection();
+        loadContents(currentFolderId);
+    };
+
+    const handleBulkMove = async (targetFolderId) => {
+        if (!targetFolderId) return;
+        for (const key of selectedIds) {
+            const [type, id] = key.split(":");
+            try {
+                if (type === "folder") {
+                    await moveFolder(id, targetFolderId);
+                } else {
+                    await moveFile(id, targetFolderId);
+                }
+            } catch (err) {
+                // continue moving remaining items even if one fails
+            }
+        }
+        setBulkMoveDialogOpen(false);
+        clearSelection();
+        loadContents(currentFolderId);
+    };
+
     return (
         <Layout
             searchValue={searchQuery}
@@ -344,6 +488,58 @@ function Dashboard() {
             onClearSearch={handleClearSearch}
             searchPlaceholder="Dosya ara..."
         >
+            <div
+                className="dashboard-dropzone"
+                style={{ position: "relative" }}
+                onDragEnter={handleDragEnter}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+            >
+                {isDragging && !isReadOnly && (
+                    <div
+                        style={{
+                            position: "absolute",
+                            inset: 0,
+                            zIndex: 10,
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 8,
+                            background: "rgba(25, 118, 210, 0.08)",
+                            border: "2px dashed #1976d2",
+                            borderRadius: 8,
+                            pointerEvents: "none",
+                        }}
+                    >
+                        <CloudUploadIcon sx={{ fontSize: 48, color: "#1976d2" }} />
+                        <Typography variant="h6" sx={{ color: "#1976d2" }}>Yüklemek için dosyaları buraya bırakın</Typography>
+                    </div>
+                )}
+
+                {selectedIds.size > 0 && (
+                    <Paper
+                        variant="outlined"
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 2,
+                            p: 1.5,
+                            mb: 2,
+                        }}
+                    >
+                        <Typography variant="body2">{selectedIds.size} öğe seçildi</Typography>
+                        <Button size="small" startIcon={<DriveFileMoveIcon />} onClick={() => setBulkMoveDialogOpen(true)}>
+                            Taşı
+                        </Button>
+                        <Button size="small" color="error" startIcon={<DeleteIcon />} onClick={() => setBulkDeleteConfirmOpen(true)}>
+                            Sil
+                        </Button>
+                        <Button size="small" onClick={clearSelection}>Seçimi Kaldır</Button>
+                    </Paper>
+                )}
+
             <div className="dashboard-topbar">
                 <div>
                     <Typography variant="h4" className="dashboard-title">
@@ -390,6 +586,7 @@ function Dashboard() {
                         </Menu>
                         <input
                             type="file"
+                            multiple
                             onChange={handleFileUpload}
                             style={{ display: "none" }}
                             id="fileInput"
@@ -413,21 +610,81 @@ function Dashboard() {
             {searchResults ? (
                 <>
                     <Typography variant="h6">Arama Sonuçları</Typography>
-                    <List>
-                        {searchResults.map((file) => (
-                            <ListItem
-                                key={file.id}
-                                secondaryAction={
-                                    <IconButton onClick={() => downloadFile(file.id, file.name)}>
-                                        <DownloadIcon />
-                                    </IconButton>
-                                }
-                            >
-                                <span style={{ marginRight: 8, display: "flex" }}>{getFileIcon(file.extension)}</span>
-                                <ListItemText primary={file.name} secondary={`${(file.size / 1024).toFixed(1)} KB`} />
-                            </ListItem>
-                        ))}
-                    </List>
+                    {searchResults.ownFolders.length === 0 &&
+                        searchResults.ownFiles.length === 0 &&
+                        searchResults.sharedFolders.length === 0 &&
+                        searchResults.sharedFiles.length === 0 && (
+                            <Typography color="text.secondary" sx={{ mt: 2 }}>Sonuç bulunamadı</Typography>
+                        )}
+
+                    {searchResults.ownFolders.length > 0 && (
+                        <>
+                            <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 2 }}>Klasörlerim</Typography>
+                            <List>
+                                {searchResults.ownFolders.map((folder) => (
+                                    <ListItem key={folder.id} button onClick={() => handleSearchOwnFolderClick(folder)}>
+                                        <ListItemIcon><FolderIcon color="primary" /></ListItemIcon>
+                                        <ListItemText primary={folder.name} />
+                                    </ListItem>
+                                ))}
+                            </List>
+                        </>
+                    )}
+
+                    {searchResults.ownFiles.length > 0 && (
+                        <>
+                            <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 2 }}>Dosyalarım</Typography>
+                            <List>
+                                {searchResults.ownFiles.map((file) => (
+                                    <ListItem
+                                        key={file.id}
+                                        secondaryAction={
+                                            <IconButton onClick={() => downloadFile(file.id, file.name)}>
+                                                <DownloadIcon />
+                                            </IconButton>
+                                        }
+                                    >
+                                        <span style={{ marginRight: 8, display: "flex" }}>{getFileIcon(file.extension)}</span>
+                                        <ListItemText primary={file.name} secondary={`${(file.size / 1024).toFixed(1)} KB`} />
+                                    </ListItem>
+                                ))}
+                            </List>
+                        </>
+                    )}
+
+                    {searchResults.sharedFolders.length > 0 && (
+                        <>
+                            <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 2 }}>Benimle Paylaşılan Klasörler</Typography>
+                            <List>
+                                {searchResults.sharedFolders.map((share) => (
+                                    <ListItem key={share.id} button onClick={() => handleSearchSharedFolderClick(share)}>
+                                        <ListItemIcon><FolderIcon color="primary" /></ListItemIcon>
+                                        <ListItemText primary={share.folderName} secondary={`Paylaşan: ${share.sharedByUsername}`} />
+                                    </ListItem>
+                                ))}
+                            </List>
+                        </>
+                    )}
+
+                    {searchResults.sharedFiles.length > 0 && (
+                        <>
+                            <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 2 }}>Benimle Paylaşılan Dosyalar</Typography>
+                            <List>
+                                {searchResults.sharedFiles.map((share) => (
+                                    <ListItem
+                                        key={share.id}
+                                        secondaryAction={
+                                            <IconButton onClick={() => downloadFile(share.fileId, share.fileName)}>
+                                                <DownloadIcon />
+                                            </IconButton>
+                                        }
+                                    >
+                                        <ListItemText primary={share.fileName} secondary={`Paylaşan: ${share.sharedByUsername}`} />
+                                    </ListItem>
+                                ))}
+                            </List>
+                        </>
+                    )}
                 </>
             ) : (
                 <>
@@ -459,6 +716,15 @@ function Dashboard() {
                                             <Typography noWrap sx={{ maxWidth: "100%" }}>{folder.name}</Typography>
                                         </CardActionArea>
                                         {!isReadOnly && (
+                                            <Checkbox
+                                                size="small"
+                                                checked={selectedIds.has(selectionKey("folder", folder.id))}
+                                                onClick={(e) => e.stopPropagation()}
+                                                onChange={() => toggleSelect("folder", folder.id)}
+                                                sx={{ position: "absolute", top: 4, left: 4 }}
+                                            />
+                                        )}
+                                        {!isReadOnly && (
                                             <IconButton
                                                 size="small"
                                                 sx={{ position: "absolute", top: 8, right: 8 }}
@@ -485,6 +751,13 @@ function Dashboard() {
                                                 )
                                             }
                                         >
+                                            {!isReadOnly && (
+                                                <Checkbox
+                                                    size="small"
+                                                    checked={selectedIds.has(selectionKey("folder", folder.id))}
+                                                    onChange={() => toggleSelect("folder", folder.id)}
+                                                />
+                                            )}
                                             <FolderIcon color="primary" style={{ marginRight: 8 }} />
                                             <ListItemText
                                                 primary={folder.name}
@@ -515,6 +788,13 @@ function Dashboard() {
                         <div className="file-grid">
                             {files.map((file) => (
                                 <div className="file-row" key={file.id}>
+                                    {!isReadOnly && (
+                                        <Checkbox
+                                            size="small"
+                                            checked={selectedIds.has(selectionKey("file", file.id))}
+                                            onChange={() => toggleSelect("file", file.id)}
+                                        />
+                                    )}
                                     <span className="file-row-icon">{getFileIcon(file.extension)}</span>
                                     <div className="file-row-info">
                                         <Typography variant="body2" noWrap className="file-row-name">{file.name}</Typography>
@@ -542,6 +822,13 @@ function Dashboard() {
                                         </IconButton>
                                     }
                                 >
+                                    {!isReadOnly && (
+                                        <Checkbox
+                                            size="small"
+                                            checked={selectedIds.has(selectionKey("file", file.id))}
+                                            onChange={() => toggleSelect("file", file.id)}
+                                        />
+                                    )}
                                     <span style={{ marginRight: 8, display: "flex" }}>{getFileIcon(file.extension)}</span>
                                     <ListItemText primary={file.name} secondary={`${(file.size / 1024).toFixed(1)} KB`} />
                                 </ListItem>
@@ -550,6 +837,7 @@ function Dashboard() {
                     )}
                 </>
             )}
+            </div>
 
             <Dialog open={newFolderDialogOpen} onClose={() => setNewFolderDialogOpen(false)}>
                 <DialogTitle>Yeni Klasör</DialogTitle>
@@ -674,6 +962,20 @@ function Dashboard() {
                 onClose={() => setMoveDialogOpen(false)}
                 onConfirm={handleConfirmMove}
             />
+
+            <MoveDialog
+                open={bulkMoveDialogOpen}
+                onClose={() => setBulkMoveDialogOpen(false)}
+                onConfirm={handleBulkMove}
+            />
+
+            <Dialog open={bulkDeleteConfirmOpen} onClose={() => setBulkDeleteConfirmOpen(false)}>
+                <DialogTitle>{selectedIds.size} öğeyi silmek istediğinize emin misiniz?</DialogTitle>
+                <DialogActions>
+                    <Button onClick={() => setBulkDeleteConfirmOpen(false)}>İptal</Button>
+                    <Button color="error" variant="contained" onClick={handleBulkDelete}>Sil</Button>
+                </DialogActions>
+            </Dialog>
 
             <Menu anchorEl={menuAnchor} open={!!menuAnchor} onClose={closeMenu}>
                 {menuTarget?.type === "file" && (

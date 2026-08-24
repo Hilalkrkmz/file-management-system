@@ -17,3 +17,9 @@ export const getProfilePhotoUrl = () => {
 
 export const changePassword = (currentPassword, newPassword) =>
     axiosInstance.put("/users/me/password", { currentPassword, newPassword });
+
+export const changeEmail = (newEmail, currentPassword) =>
+    axiosInstance.put("/users/me/email", { newEmail, currentPassword });
+
+export const deleteAccount = (currentPassword) =>
+    axiosInstance.delete("/users/me", { data: { currentPassword } });

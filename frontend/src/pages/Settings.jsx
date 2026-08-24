@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import { getMyProfile, uploadProfilePhoto } from "../api/userApi";
+import { getMyProfile, uploadProfilePhoto, changePassword, changeEmail, deleteAccount } from "../api/userApi";
 import axiosInstance from "../api/axiosInstance";
 import Layout from "../components/Layout.jsx";
 import Typography from "@mui/material/Typography";
@@ -12,13 +12,18 @@ import Box from "@mui/material/Box";
 import Alert from "@mui/material/Alert";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
-import { changePassword } from "../api/userApi";
 import Divider from "@mui/material/Divider";
 import LockIcon from "@mui/icons-material/Lock";
+import EmailIcon from "@mui/icons-material/Email";
+import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import TextField from "@mui/material/TextField";
 import Collapse from "@mui/material/Collapse";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
 
 function Settings() {
     const { user, logout } = useAuth();
@@ -30,6 +35,13 @@ function Settings() {
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [passwordSectionOpen, setPasswordSectionOpen] = useState(false);
+
+    const [newEmail, setNewEmail] = useState("");
+    const [emailPassword, setEmailPassword] = useState("");
+    const [emailSectionOpen, setEmailSectionOpen] = useState(false);
+
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [deletePassword, setDeletePassword] = useState("");
 
     const loadProfile = () => {
         getMyProfile().then((res) => {
@@ -78,6 +90,32 @@ function Settings() {
             setPasswordSectionOpen(false);
         } catch (err) {
             setError(err.response?.data?.message || "Şifre değiştirilemedi");
+        }
+    };
+
+    const handleChangeEmail = async () => {
+        setError("");
+        setSuccess("");
+        try {
+            await changeEmail(newEmail, emailPassword);
+            setSuccess("Email başarıyla değiştirildi");
+            setNewEmail("");
+            setEmailPassword("");
+            setEmailSectionOpen(false);
+            loadProfile();
+        } catch (err) {
+            setError(err.response?.data?.message || "Email değiştirilemedi");
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        setError("");
+        try {
+            await deleteAccount(deletePassword);
+            logout();
+            navigate("/login");
+        } catch (err) {
+            setError(err.response?.data?.message || "Hesap silinemedi");
         }
     };
 
@@ -174,7 +212,79 @@ function Settings() {
                         Şifreyi Güncelle
                     </Button>
                 </Collapse>
+
+                <Button
+                    onClick={() => setEmailSectionOpen((open) => !open)}
+                    endIcon={emailSectionOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    sx={{ mb: 1 }}
+                >
+                    Email Değiştir
+                </Button>
+                <Collapse in={emailSectionOpen}>
+                    <TextField
+                        fullWidth
+                        size="small"
+                        type="email"
+                        label="Yeni email"
+                        value={newEmail}
+                        onChange={(e) => setNewEmail(e.target.value)}
+                        sx={{ mb: 1 }}
+                    />
+                    <TextField
+                        fullWidth
+                        size="small"
+                        type="password"
+                        label="Mevcut şifre"
+                        value={emailPassword}
+                        onChange={(e) => setEmailPassword(e.target.value)}
+                        sx={{ mb: 1 }}
+                    />
+                    <Button
+                        variant="outlined"
+                        startIcon={<EmailIcon />}
+                        onClick={handleChangeEmail}
+                        disabled={!newEmail || !emailPassword}
+                        sx={{ mb: 3 }}
+                    >
+                        Emaili Güncelle
+                    </Button>
+                </Collapse>
+
+                <Divider sx={{ my: 3 }} />
+
+                <Button
+                    variant="outlined"
+                    color="error"
+                    startIcon={<DeleteForeverIcon />}
+                    onClick={() => setDeleteDialogOpen(true)}
+                >
+                    Hesabı Sil
+                </Button>
             </Paper>
+
+            <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+                <DialogTitle>Hesabınızı silmek istediğinize emin misiniz?</DialogTitle>
+                <DialogContent>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Tüm dosyalarınız, klasörleriniz ve paylaşımlarınız kalıcı olarak silinecek. Bu işlem geri alınamaz.
+                    </Typography>
+                    <TextField
+                        autoFocus
+                        fullWidth
+                        size="small"
+                        type="password"
+                        label="Şifrenizi girin"
+                        value={deletePassword}
+                        onChange={(e) => setDeletePassword(e.target.value)}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDeleteDialogOpen(false)}>İptal</Button>
+                    <Button color="error" variant="contained" onClick={handleDeleteAccount} disabled={!deletePassword}>
+                        Hesabı Kalıcı Olarak Sil
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Layout>
     );
 }

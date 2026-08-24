@@ -129,6 +129,12 @@ public class FolderService {
         );
     }
 
+    public List<FolderResponse> search(String username, String query) {
+        User owner = getUser(username);
+        return folderRepository.findByOwnerAndNameContainingIgnoreCaseAndIsDeletedFalse(owner, query)
+                .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
     public List<FolderResponse> listTrash(String username) {
         User owner = getUser(username);
         return folderRepository.findByOwnerAndIsDeletedTrue(owner)
@@ -206,5 +212,14 @@ public class FolderService {
         folderShareRepository.deleteAll(folderShareRepository.findByFolder(folder));
 
         folderRepository.delete(folder);
+    }
+
+    public void purgeAllForOwner(User user) {
+        fileRepository.findByOwner(user).stream()
+                .filter(f -> f.getFolder() == null)
+                .forEach(fileService::purgeFile);
+
+        folderRepository.findByOwnerAndParentFolderIsNull(user)
+                .forEach(this::permanentlyDeleteRecursive);
     }
 }

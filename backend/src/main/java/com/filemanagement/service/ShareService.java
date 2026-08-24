@@ -210,6 +210,26 @@ public class ShareService {
                 .collect(Collectors.toList());
     }
 
+    public List<FileShareResponse> searchSharedFiles(String username, String query) {
+        User user = getUser(username);
+        String lower = query.toLowerCase();
+        return fileShareRepository.findBySharedWith(user).stream()
+                .filter(s -> s.getFile().getName().toLowerCase().contains(lower))
+                .map(s -> new FileShareResponse(s.getId(), s.getFile().getId(), s.getFile().getName(),
+                        s.getSharedBy().getUsername(), s.getSharedWith().getUsername(), s.getPermission()))
+                .collect(Collectors.toList());
+    }
+
+    public List<FolderShareResponse> searchSharedFolders(String username, String query) {
+        User user = getUser(username);
+        String lower = query.toLowerCase();
+        return folderShareRepository.findBySharedWith(user).stream()
+                .filter(s -> s.getFolder().getName().toLowerCase().contains(lower))
+                .map(s -> new FolderShareResponse(s.getId(), s.getFolder().getId(), s.getFolder().getName(),
+                        s.getSharedBy().getUsername(), s.getSharedWith().getUsername(), s.getPermission()))
+                .collect(Collectors.toList());
+    }
+
     public void removeFolderShare(String username, UUID shareId) {
         User owner = getUser(username);
         FolderShare share = folderShareRepository.findById(shareId)

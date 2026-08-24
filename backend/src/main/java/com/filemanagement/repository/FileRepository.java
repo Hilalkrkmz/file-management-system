@@ -17,6 +17,8 @@ public interface FileRepository extends JpaRepository<File, UUID> {
 
     List<File> findByFolder(Folder folder);
 
+    List<File> findByOwner(User owner);
+
     List<File> findByOwnerAndFolderIsNullAndIsDeletedFalse(User owner);
 
     List<File> findByOwnerAndIsDeletedFalse(User owner);
