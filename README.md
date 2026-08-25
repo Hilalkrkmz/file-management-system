@@ -128,6 +128,102 @@ The defaults are fine for local development; the following **must** be overridde
 | Admin | User management (role/quota/delete), browse every file in the system |
 | User | Create folders, upload/download/delete/move/share files, search, star |
 
+## API Endpoints
+
+All routes are prefixed with `/api` and require a `Authorization: Bearer <token>` header unless noted otherwise.
+
+**Auth**
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/auth/register` | Create an account |
+| POST | `/auth/login` | Log in, returns a JWT |
+
+**Users**
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/users/me` | Current user's profile |
+| POST | `/users/me/photo` | Upload profile photo |
+| GET | `/users/me/photo` | Get profile photo |
+| PUT | `/users/me/password` | Change password |
+| PUT | `/users/me/email` | Change email |
+| PUT | `/users/me/username` | Change username (returns a fresh JWT) |
+| DELETE | `/users/me` | Permanently delete your account |
+
+**Folders**
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/folders` | Create a folder |
+| GET | `/folders?parentId=` | List folders in a parent (root if omitted) |
+| PATCH | `/folders/{id}` | Rename |
+| PUT | `/folders/{id}/move?targetFolderId=` | Move |
+| DELETE | `/folders/{id}` | Move to trash |
+| GET | `/folders/trash` | List trashed folders |
+| POST | `/folders/{id}/restore` | Restore from trash |
+| DELETE | `/folders/{id}/permanent` | Permanently delete |
+
+**Files**
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/files?folderId=` | Upload a file (multipart) |
+| GET | `/files?folderId=` | List files in a folder (root if omitted) |
+| GET | `/files/{id}/download` | Download |
+| PATCH | `/files/{id}` | Rename |
+| PUT | `/files/{id}/move?targetFolderId=` | Move |
+| DELETE | `/files/{id}` | Move to trash |
+| GET | `/files/trash` | List trashed files |
+| POST | `/files/{id}/restore` | Restore from trash |
+| DELETE | `/files/{id}/permanent` | Permanently delete |
+| GET | `/files/recent` | Recently accessed files |
+| POST | `/files/{id}/star` | Toggle star |
+| GET | `/files/starred` | List starred files |
+| GET | `/files/search?query=` | Search own files by name |
+| GET | `/files/storage-usage` | Storage quota / usage stats |
+
+**Sharing**
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/share/user` | Share a file with a user |
+| GET | `/share/with-me` | Files shared with you |
+| GET | `/share/file/{fileId}` | List shares for a file you own |
+| DELETE | `/share/{shareId}` | Remove a file share |
+| POST | `/share/folder` | Share a folder with a user |
+| GET | `/share/folders-with-me` | Folders shared with you |
+| GET | `/share/folder/{folderId}` | List shares for a folder you own |
+| DELETE | `/share/folder/{shareId}` | Remove a folder share |
+| POST | `/share/link` | Create a time-limited download link |
+| GET | `/share/public/{token}` | Download via link — *no auth required* |
+
+**Search**
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/search?query=` | Combined search: own files, own folders, shared files, shared folders |
+
+**Notifications**
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/notifications` | List notifications |
+| GET | `/notifications/unread-count` | Unread count |
+| POST | `/notifications/read-all` | Mark all as read |
+
+**Admin** — *requires the ADMIN role*
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/admin/users` | List all users |
+| PUT | `/admin/users/{id}/quota` | Change a user's storage quota |
+| PUT | `/admin/users/{id}/role` | Change a user's role |
+| DELETE | `/admin/users/{id}` | Delete a user (cascades to all their data) |
+| GET | `/admin/files` | List every file in the system |
+| DELETE | `/admin/files/{id}` | Delete any file |
+| DELETE | `/admin/folders/{id}` | Delete any folder |
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
