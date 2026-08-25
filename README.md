@@ -4,8 +4,6 @@ A web-based file management system built with Spring Boot and React, where users
 
 ## Screenshots
 
-> Images coming soon. Drop the following files into `docs/screenshots/` with these exact names and they'll show up here automatically.
-
 | Login | My Files |
 |---|---|
 | ![Login](docs/screenshots/login.png) | ![Dashboard](docs/screenshots/dashboard.png) |
@@ -14,9 +12,17 @@ A web-based file management system built with Spring Boot and React, where users
 |---|---|
 | ![Shared With Me](docs/screenshots/shared-with-me.png) | ![Trash](docs/screenshots/trash.png) |
 
-| Admin Panel | Settings |
+| Starred | Storage Usage |
 |---|---|
-| ![Admin Panel](docs/screenshots/admin.png) | ![Settings](docs/screenshots/settings.png) |
+| ![Starred](docs/screenshots/starred.png) | ![Storage Usage](docs/screenshots/storage.png) |
+
+| Settings | Admin Panel |
+|---|---|
+| ![Settings](docs/screenshots/settings.png) | ![Admin Panel](docs/screenshots/admin.png) |
+
+| Admin — Users | Admin — All Files |
+|---|---|
+| ![Admin Users](docs/screenshots/admin-users.png) | ![Admin Files](docs/screenshots/admin-files.png) |
 
 ## Features
 
@@ -41,6 +47,9 @@ A web-based file management system built with Spring Boot and React, where users
 **Trash**
 - Soft delete: removed files/folders land in the trash
 - Restore or permanently delete, individually or in bulk
+
+**Storage**
+- Storage usage page: quota bar, file count, used/remaining space
 
 **Account**
 - JWT-based registration / login
