@@ -22,12 +22,14 @@ public class AdminService {
     private final UserRepository userRepository;
     private final FileRepository fileRepository;
     private final FolderRepository folderRepository;
+    private final UserService userService;
 
     public AdminService(UserRepository userRepository, FileRepository fileRepository,
-                        FolderRepository folderRepository) {
+                        FolderRepository folderRepository, UserService userService) {
         this.userRepository = userRepository;
         this.fileRepository = fileRepository;
         this.folderRepository = folderRepository;
+        this.userService = userService;
     }
 
     public List<UserResponse> listUsers() {
@@ -62,10 +64,9 @@ public class AdminService {
     }
 
     public void deleteUser(UUID userId) {
-        if (!userRepository.existsById(userId)) {
-            throw new IllegalArgumentException("Kullanıcı bulunamadı");
-        }
-        userRepository.deleteById(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı"));
+        userService.purgeAccount(user);
     }
 
     public UserResponse updateQuota(UUID userId, long quotaMb) {

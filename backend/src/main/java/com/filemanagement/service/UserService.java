@@ -137,6 +137,10 @@ public class UserService {
             throw new IllegalArgumentException("Şifre yanlış");
         }
 
+        purgeAccount(user);
+    }
+
+    public void purgeAccount(User user) {
         fileShareRepository.deleteAll(fileShareRepository.findBySharedWith(user));
         folderShareRepository.deleteAll(folderShareRepository.findBySharedWith(user));
         notificationRepository.deleteAll(notificationRepository.findByRecipientOrderByCreatedAtDesc(user));
