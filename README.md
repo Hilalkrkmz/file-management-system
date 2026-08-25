@@ -127,3 +127,7 @@ The defaults are fine for local development; the following **must** be overridde
 |---|---|
 | Admin | User management (role/quota/delete), browse every file in the system |
 | User | Create folders, upload/download/delete/move/share files, search, star |
+
+## License
+
+MIT — see [LICENSE](LICENSE).
