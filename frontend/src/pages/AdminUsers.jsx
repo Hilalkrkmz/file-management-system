@@ -12,6 +12,7 @@ import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
 import IconButton from "@mui/material/IconButton";
 import Chip from "@mui/material/Chip";
+import Checkbox from "@mui/material/Checkbox";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -33,6 +34,8 @@ function AdminUsers() {
     const [roleTarget, setRoleTarget] = useState(null);
     const [orderBy, setOrderBy] = useState("username");
     const [order, setOrder] = useState("asc");
+    const [selectedIds, setSelectedIds] = useState(new Set());
+    const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
     const loadUsers = () => {
         getAllUsers()
@@ -97,15 +100,68 @@ function AdminUsers() {
         return 0;
     });
 
+    const toggleRow = (id) => {
+        setSelectedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedIds.size === sortedUsers.length) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(sortedUsers.map((u) => u.id)));
+        }
+    };
+
+    const clearSelection = () => setSelectedIds(new Set());
+
+    const handleBulkDelete = async () => {
+        for (const id of selectedIds) {
+            try {
+                await adminDeleteUser(id);
+            } catch (err) {
+                // continue deleting remaining users even if one fails
+            }
+        }
+        setBulkDeleteOpen(false);
+        clearSelection();
+        loadUsers();
+    };
+
     return (
         <Layout>
             <Typography variant="h4" gutterBottom>Kullanıcılar</Typography>
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
+            {selectedIds.size > 0 && (
+                <Paper
+                    variant="outlined"
+                    sx={{ display: "flex", alignItems: "center", gap: 2, p: 1.5, mb: 2 }}
+                >
+                    <Typography variant="body2">{selectedIds.size} öğe seçildi</Typography>
+                    <Button size="small" color="error" startIcon={<DeleteIcon />} onClick={() => setBulkDeleteOpen(true)}>
+                        Sil
+                    </Button>
+                    <Button size="small" onClick={clearSelection}>Seçimi Kaldır</Button>
+                </Paper>
+            )}
+
             <TableContainer component={Paper} variant="outlined">
                 <Table>
                     <TableHead>
                         <TableRow>
+                            <TableCell padding="checkbox">
+                                <Checkbox
+                                    size="small"
+                                    checked={sortedUsers.length > 0 && selectedIds.size === sortedUsers.length}
+                                    indeterminate={selectedIds.size > 0 && selectedIds.size < sortedUsers.length}
+                                    onChange={toggleSelectAll}
+                                />
+                            </TableCell>
                             <TableCell>
                                 <TableSortLabel
                                     active={orderBy === "username"}
@@ -147,7 +203,14 @@ function AdminUsers() {
                     </TableHead>
                     <TableBody>
                         {sortedUsers.map((u) => (
-                            <TableRow key={u.id} hover>
+                            <TableRow key={u.id} hover selected={selectedIds.has(u.id)}>
+                                <TableCell padding="checkbox">
+                                    <Checkbox
+                                        size="small"
+                                        checked={selectedIds.has(u.id)}
+                                        onChange={() => toggleRow(u.id)}
+                                    />
+                                </TableCell>
                                 <TableCell>{u.username}</TableCell>
                                 <TableCell>{u.email}</TableCell>
                                 <TableCell>
@@ -219,6 +282,14 @@ function AdminUsers() {
                 <DialogActions>
                     <Button onClick={() => setDeleteTarget(null)}>İptal</Button>
                     <Button color="error" variant="contained" onClick={handleConfirmDelete}>Sil</Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog open={bulkDeleteOpen} onClose={() => setBulkDeleteOpen(false)}>
+                <DialogTitle>{selectedIds.size} kullanıcı silinsin mi? Bu işlem geri alınamaz.</DialogTitle>
+                <DialogActions>
+                    <Button onClick={() => setBulkDeleteOpen(false)}>İptal</Button>
+                    <Button color="error" variant="contained" onClick={handleBulkDelete}>Sil</Button>
                 </DialogActions>
             </Dialog>
         </Layout>
